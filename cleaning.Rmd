@@ -1,0 +1,223 @@
+---
+title: "Preprocessing the data"
+author: "Vitaly Lorman"
+date: "3/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(lubridate)
+library(scales)
+library(reshape2)
+```
+
+## Reading in the data
+
+```{r download}
+arrests_URL<-"https://github.com/phillydao/phillydao-public-data/raw/master/docs/data/arrest_data_daily_citywide.csv"
+download.file(arrests_URL, "arrests.csv")
+arrests<-read.csv("arrests.csv")
+
+
+
+#Incidents data download from Open Data Philly
+#incidents_data<-read.csv("incidents.csv")
+
+charges_URL<-"https://github.com/phillydao/phillydao-public-data/raw/master/docs/data/charges_data_daily_citywide.csv"
+download.file(charges_URL, "charges.csv")
+charges<-read.csv("charges.csv")
+
+arrests$date_value<-as.Date(arrests$date_value)
+#arrests<-arrests[1:nrow(arrests)-1,] #drop the date that doesn't overlap with charges
+charges$date_value<-as.Date(charges$date_value)
+#incidents_data$dispatch_date<-as.Date(incidents_data$dispatch_date)
+```
+
+##Preprocessing
+
+### Grouping charge/arrest types
+
+1. Group offenses for charges and arrests into 6 groups: violent, property, drugs, firearms, other, and uncategorized. Calculate charge and arrest total in each of these categories.
+```{r grouping outcomes}
+violent_ca<-c("Homicide", "Non.Fatal.Shooting", "Rape", "Robbery.Gun",
+           "Robbery.Other", "Aggravated.Assault.Gun", "Aggravated.Assault.Other",
+           "Other.Assaults", "Sexual.Assault.and.Other.Sex.Offenses")
+property_ca<-c("Burglary.Residential", "Burglary.Commercial", "Theft.of.Motor.Vehicle.Tag",
+            "Theft.from.Person", "Theft.from.Auto", "Retail.Theft", "Theft",
+            "Auto.Theft", "Fraud.Theft.of.Services", "Embezzlement")
+drugs_ca<-c("Drug.Possession", "Drug.Sales", "DUI")
+firearms_ca<-c("Illegal.Firearms.Possession")
+other_ca<-c("Prostitution.Sex.Work", "Patronizing.Prostitutes", "Threats.of.Violence")
+uncategorized_ca<-c("Uncategorized.Offenses")
+
+arrests$arrests_violent<-rowSums(arrests[,violent_ca])
+arrests$arrests_property<-rowSums(arrests[,property_ca])
+arrests$arrests_drugs<-rowSums(arrests[,drugs_ca])
+arrests$arrests_firearms<-arrests[,firearms_ca]
+arrests$arrests_other<-rowSums(arrests[,other_ca])
+arrests$arrests_uncategorized<-arrests[,uncategorized_ca]
+
+charges$charges_violent<-rowSums(charges[,violent_ca])
+charges$charges_property<-rowSums(charges[,property_ca])
+charges$charges_drugs<-rowSums(charges[,drugs_ca])
+charges$charges_firearms<-charges[,firearms_ca]
+charges$charges_other<-rowSums(charges[,other_ca])
+charges$charges_uncategorized<-charges[,uncategorized_ca]
+
+#incidents_wide$incidents_violent<-rowSums(incidents_wide[,violent_incidents])
+#incidents_wide$incidents_property<-rowSums(incidents_wide[,property_incidents])
+#incidents_wide$incidents_drugs<-rowSums(incidents_wide[,drugs_incidents])
+#incidents_wide$incidents_firearms<-incidents_wide[,firearms_incidents]
+#incidents_wide$incidents_other<-rowSums(incidents_wide[,other_incidents])
+
+#incidents<-incidents_wide
+```
+
+2. Subset the charge and arrest data frames on common values of date_value and merge them by date_value, keeping just the totals for each of the 6 categories. 
+```{r}
+#Combining the data frames
+arrest_dates<-unique(arrests$date_value)
+charge_dates<-unique(charges$date_value)
+#colnames(incidents)[1]<-"date_value"
+#incident_dates<-unique(incidents$date_value)
+
+common_dates<-as.Date(intersect(arrest_dates,charge_dates), origin='1970-01-01')
+
+#common_dates=intersect(arrest_dates,intersect(charge_dates, incident_dates)) %>%
+#  as.Date(origin='1970-01-01')
+
+arrests<-subset(arrests, date_value %in% common_dates)
+charges<-subset(charges, date_value %in% common_dates)
+#incidents<-subset(incidents, date_value %in% common_dates)
+
+
+comb<-arrests[,c("date_value", "arrests_violent", "arrests_property","arrests_drugs",
+                 "arrests_firearms", "arrests_other","arrests_uncategorized")] %>%
+  merge(charges[,c("date_value", "charges_violent", "charges_property","charges_drugs",
+                   "charges_firearms", "charges_other","charges_uncategorized")],
+        by="date_value") #%>%
+#  merge(incidents[,c("date_value", "incidents_violent", "incidents_property",
+#                 "incidents_drugs", "incidents_firearms", "incidents_other")],
+#        by="date_value")
+```
+
+3. Filter to include only dates prior to 2017-06-29 and after 2018-01-01. Filter out dates after 2020-03-15 (to exclude judicial actions after the COVID-19 pandemic began effecting the Philadelphia courts). Create a binary treatment variable, assigning it to be fALSE for dates prior to when Krasner took office and TRUE for dates after.
+```{r}
+comb_full<-comb
+comb<-filter(comb, date_value <= "2017-06-28" | date_value>="2018-01-01")
+comb<-filter(comb, date_value<"2020-03-15")
+comb[comb$date_value>="2018-01-01","treatment"]<-TRUE
+comb[comb$date_value<"2018-01-01", "treatment"]<-FALSE
+
+
+
+write.csv(comb, "charges_all.csv")
+write.csv(comb_full, "charges_all_full.csv")
+
+charges_all<-comb
+charges_all_full<-comb_full
+```
+
+
+
+
+4. Reshape into a long data frame with columns date_value, type (arrest or chage), group (violent, property, drugs, firearms, other, or uncategorized) and the counts for each combination of the these.
+```{r long}
+
+#arrest_groups<-colnames(charges_all)[2:7]
+#charges_groups<-colnames(charges_all)[8:13]
+#incidents_groups<-colnames(charges_all)[14:18]
+
+
+data_long<-charges_all%>%
+  melt(id=c("date_value", "treatment"))
+data_long_full<-charges_all_full%>%
+  melt(id=c("date_value"))
+
+#data_long$type<-NA
+data_long[grep("^arrests", data_long$variable), "type"]<-"arrest"
+data_long[grep("^charges", data_long$variable), "type"]<-"charge"
+
+data_long_full[grep("^arrests", data_long_full$variable), "type"]<-"arrest"
+data_long_full[grep("^charges", data_long_full$variable), "type"]<-"charge"
+#data_long[grep("^incidents", data_long$variable), "type"]<-"incident"
+#data_long$group<-NA
+data_long[grep("violent$", data_long$variable), "group"]<-"violent"
+data_long[grep("property$", data_long$variable), "group"]<-"property"
+data_long[grep("drugs$", data_long$variable), "group"]<-"drugs"
+data_long[grep("firearms$", data_long$variable), "group"]<-"firearms"
+data_long[grep("other$", data_long$variable), "group"]<-"other"
+data_long[grep("uncategorized$", data_long$variable), "group"]<-"uncategorized"
+
+data_long_full[grep("violent$", data_long_full$variable), "group"]<-"violent"
+data_long_full[grep("property$", data_long_full$variable), "group"]<-"property"
+data_long_full[grep("drugs$", data_long_full$variable), "group"]<-"drugs"
+data_long_full[grep("firearms$", data_long_full$variable), "group"]<-"firearms"
+data_long_full[grep("other$", data_long_full$variable), "group"]<-"other"
+data_long_full[grep("uncategorized$", data_long_full$variable), "group"]<-"uncategorized"
+
+
+data_long<-select(data_long, "date_value", "type", "group", "value")
+write.csv(data_long, "charges_all_long.csv")
+
+data_long_full<-select(data_long_full, "date_value", "type", "group", "value")
+write.csv(data_long_full, "charges_all_long_full.csv")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+### Grouping incident types (not necessary for analysis)
+```{r incidents}
+incidents_simple<-select(incidents_data, dispatch_date, text_general_code)
+incident_counts<-incidents_simple %>%
+  group_by(dispatch_date, text_general_code) %>%
+  summarise(count=n())
+
+incidents_wide<-dcast(incident_counts, dispatch_date~text_general_code, value.var="count", fill=0)
+
+##Incident categories
+violent_incidents<-c("Aggravated Assault Firearm", "Aggravated Assault No Firearm", "Homicide - Criminal", "Homicide - Criminal ", "Homicide - Justifiable ", "Homicide - Gross Negligence", "Other Assaults", "Rape", "Robbery Firearm", "Robbery No Firearm")
+
+property_incidents<-c("Burglary Non-Residential", "Burglary Residential", "Motor Vehicle Theft", "Theft from Vehicle", "Thefts", "Vandalism/Criminal Mischief", "Embezzlement", "Forgery and Counterfeiting", "Recovered Stolen Motor Vehicle", "Arson", "Fraud", "Receiving Stolen Property")
+
+drugs_incidents<-c("DRIVING UNDER THE INFLUENCE", "Narcotic / Drug Law Violations",  "Liquor Law Violations", "Public Drunkenness")
+
+firearms_incidents<-c("Weapon Violations")
+
+other_incidents<-c("Vagrancy/Loitering", "Offenses Against Family and Children", "Gambling Violations", "All Other Offenses", "Disorderly Conduct", "Other Sex Offenses (Not Commercialized)","Prostitution and Commercialized Vice")
+
+#codes2<-c(violent_incidents, property_incidents, drugs_incidents, firearms_incidents, other_incidents)
+#setdiff(codes, codes2)
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

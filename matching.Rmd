@@ -1,0 +1,270 @@
+---
+title: "Matching"
+author: "Vitaly Lorman"
+date: "3/23/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(lubridate)
+library(scales)
+library(reshape2)
+library(MatchIt)
+library(optmatch)
+library(Zelig)
+```
+
+In this document, we keep track of our various attempts at matching and analysis of balance.
+
+```{r read data}
+charges_all<-read.csv("charges_all.csv", row.names=1)
+charges_all_long<-read.csv("charges_all_long.csv", row.names=1)
+charges_all$date_value<-as.Date(charges_all$date_value)
+charges_all_long$date_value<-as.Date(charges_all_long$date_value)
+```
+
+
+### Nearest neighbor matching
+```{r match 1nearest neighbors}
+##default
+m_nearest.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest")
+s_nearest.out <- summary(m_1nearest.out, standardize = TRUE)
+s_nearest.out
+plot(s_nearest.out)
+
+plot(m_1nearest.out,  type = "jitter", interactive = FALSE)
+plot(m_1nearest.out,  type = "hist")
+plot(m_1nearest.out, type="qq")
+
+```
+
+
+```{r match knearest}
+m_knearest.out<-m_nearest.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", min.controls=1, max.controls=3, ratio=1275/653)
+s_nearest.out <- summary(m_1nearest.out, standardize = TRUE)
+  
+s_knearest.out <- summary(m_knearest.out, standardize = TRUE)
+s_knearest.out
+
+plot(s_knearest.out)
+plot(m_knearest.out,  type = "jitter", interactive = FALSE)
+plot(m_knearest.out,  type = "hist")
+plot(m_knearest.out, type="qq")
+```
+
+Does not seem to do better.
+
+```{r matching subclass}
+m_subclass.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="subclass")
+s_subclass.out <- summary(m_subclass.out, standardize = TRUE)
+s_subclass.out
+plot(s_subclass.out)
+
+plot(m_subclass.out,  type = "jitter", interactive = FALSE)
+plot(m_subclass.out,  type = "hist")
+plot(m_subclass.out, type="qq")
+```
+
+Subclass matching seems to do really well.
+
+```{r matching optimal}
+m_optimal.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="optimal", ratio=1275/653)
+s_optimal.out <- summary(m_optimal.out, standardize = TRUE)
+s_optimal.out
+plot(s_optimal.out)
+
+plot(m_optimal.out,  type = "jitter", interactive = FALSE)
+plot(m_optimal.out,  type = "hist")
+plot(m_optimal.out, type="qq")
+
+
+```
+Nope skip this one!
+
+
+```{r matching cem}
+
+m_cem.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="cem")
+s_cem.out <- summary(m_cem.out, standardize = TRUE)
+s_cem.out
+plot(s_cem.out)
+
+plot(m_cem.out,  type = "jitter", interactive = FALSE)
+plot(m_cem.out,  type = "hist")
+plot(m_cem.out, type="qq")
+
+
+
+
+```
+
+CEM drops too many observations
+
+Try discarding everything outside the convex hull
+
+```{r discard hull}
+m_hull.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", discard="both")
+
+s_hull.out <- summary(m_hull.out, standardize = TRUE)
+s_hull.out
+plot(s_hull.out)
+
+plot(m_hull.out,  type = "jitter", interactive = FALSE)
+plot(m_hull.out,  type = "hist")
+plot(m_hull.out, type="qq")
+
+m_hull_subclass.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="subclass", discard="both")
+s_hull_subclass.out<-summary(m_hull_subclass.out, standardize=TRUE)
+s_hull_subclass.out
+
+plot(s_hull_subclass.out)
+plot(m_hull_subclass.out,  type = "jitter", interactive = FALSE)
+plot(m_hull_subclass.out,  type = "hist")
+plot(m_hull_subclass.out, type="qq")
+
+```
+
+Try nearest neighbor with calipers (ok to drop some treatment units)
+
+```{r calipers}
+mcal1.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.01)
+scal1.out <- summary(mcal1.out, standardize = TRUE)
+scal1.out
+plot(scal1.out)
+
+plot(mcal1.out,  type = "jitter", interactive = FALSE)
+plot(mcal1.out,  type = "hist")
+plot(mcal1.out, type="qq")
+
+
+
+```
+May still need to handle other manually.
+
+## Matching with subclasses
+
+The number of arrests for various offenses is the biggest potential confounder of charges. We account for this by matching. After experimenting with different methods of matching, we found the best balance using subclass matching while discarding a handful of observations (?) outside the common support of the propensity scores. This is justified because...
+
+```{r matching}
+m.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_firearms++arrests_other+arrests_uncategorized, data=charges_all, method="subclass", discard="both")
+
+s.out <- summary(m.out, standardize = TRUE)
+s.out
+
+plot(s.out)
+plot(m.out,  type = "jitter", interactive = FALSE)
+plot(m.out,  type = "hist")
+plot(m.out, type="qq", interactive=FALSE, subclass=1:6)
+
+matched_data<-match.data(m.out)
+summarise(group_by(matched_data, subclass, treatment), count=n())
+
+```
+
+Let's look at the distributions of arrests in the different classes:
+```{r}
+matched_long<-melt(matched_data, id=c("date_value", "subclass", "treatment", "weights", "distance"))
+
+subclass_sum<-matched_long %>%
+  group_by(subclass, variable, treatment) %>%
+  summarise(mean=mean(value))
+
+subclass_arrest_sum<-subclass_sum[grep("^arrests", subclass_sum$variable),]
+
+ggplot(data=subclass_arrest_sum, aes(x=variable, y=mean, fill=treatment))+
+  geom_bar(position="dodge", stat="identity")+
+  facet_wrap(~subclass)+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+```
+
+## Using linear regression to estimate causal effects
+
+We now use linear regression to estimate causal effects on the matched data. We carry this out by subclass, then aggregate the results.
+
+```{r reg, echo=FALSE}
+z_violent.out<-zelig(charges_violent~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, mode="ls", by="subclass")
+#x.out <- setx(z.out, data = match.data(m.out), fn = NULL, cond = TRUE)
+#s.out <- sim(z.out, x = x.out)
+s_violent<-summary(z_violent.out)
+
+extract_coef<-function(coef_list){
+  coef_list["treatmentTRUE"]
+}
+violent_coefs<-as.numeric(lapply(coef(z_violent.out), extract_coef))
+
+colnames(matched_data)
+
+violent_subclass_control_means<-matched_data %>%
+  select(date_value, charges_violent, treatment, subclass)%>%
+  filter(!treatment) %>%
+  group_by(subclass) %>%
+  summarise(mean=mean(charges_violent))
+
+violent_subclass_control_means<-violent_subclass_control_means$mean
+
+violent_coefs/violent_subclass_control_means
+
+lm_violent_ag<-lm(charges_violent~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, weights=weights)
+summary(lm_violent_ag)
+
+
+
+z_property.out<-zelig(charges_property~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, mode="ls", by="subclass")
+#x.out <- setx(z.out, data = match.data(m.out), fn = NULL, cond = TRUE)
+#s.out <- sim(z.out, x = x.out)
+summary(z_property.out)
+
+lm_property_ag<-lm(charges_property~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, weights=weights)
+summary(lm_property_ag)
+
+z_drugs.out<-zelig(charges_drugs~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, mode="ls", by="subclass")
+#x.out <- setx(z.out, data = match.data(m.out), fn = NULL, cond = TRUE)
+#s.out <- sim(z.out, x = x.out)
+summary(z_drugs.out)
+
+lm_drugs_ag<-lm(charges_drugs~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, weights=weights)
+summary(lm_drugs_ag)
+
+z_firearms.out<-zelig(charges_firearms~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, mode="ls", by="subclass")
+#x.out <- setx(z.out, data = match.data(m.out), fn = NULL, cond = TRUE)
+#s.out <- sim(z.out, x = x.out)
+summary(z_firearms.out)
+
+lm_firearms_ag<-lm(charges_firearms~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, weights=weights)
+summary(lm_firearms_ag)
+
+z_other.out<-zelig(charges_other~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, mode="ls", by="subclass")
+#x.out <- setx(z.out, data = match.data(m.out), fn = NULL, cond = TRUE)
+#s.out <- sim(z.out, x = x.out)
+summary(z_other.out)
+
+lm_other_ag<-lm(charges_other~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, weights=weights)
+summary(lm_other_ag)
+
+z_uncategorized.out<-zelig(charges_uncategorized~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data, mode="ls", by="subclass")
+#x.out <- setx(z.out, data = match.data(m.out), fn = NULL, cond = TRUE)
+#s.out <- sim(z.out, x = x.out)
+summary(z_uncategorized.out)
+
+lm_uncategorized_ag<-lm(charges_uncategorized~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data,  weights=weights)
+summary(lm_uncategorized_ag)
+
+
+ag_coefs<-c(lm_violent_ag$coefficients["treatmentTRUE"], 
+            lm_property_ag$coefficients["treatmentTRUE"],
+            lm_drugs_ag$coefficients["treatmentTRUE"],
+            lm_firearms_ag$coefficients["treatmentTRUE"],
+            lm_other_ag$coefficients["treatmentTRUE"],
+            lm_uncategorized_ag$coefficients["treatmentTRUE"])
+
+
+
+```

@@ -1,0 +1,201 @@
+---
+title: "Preprocessing city data"
+author: "Vitaly Lorman"
+date: "3/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r libraries}
+library(tidyverse)
+library(knitr)
+library(lubridate)
+library(scales)
+library(reshape2)
+
+```
+
+
+## Downloading the data
+
+```{r download}
+if (is_empty(arrests)){
+  arrests_URL<-"https://github.com/phillydao/phillydao-public-data/raw/master/docs/data/arrest_data_daily_citywide.csv"
+  download.file(arrests_URL, "arrests.csv")
+  arrests<-read.csv("arrests.csv")
+}
+
+
+#Incidents data download from Open Data Philly
+if (is_empty(incidents))
+incidents<-read.csv("incidents.csv")
+
+charges_URL<-"https://github.com/phillydao/phillydao-public-data/raw/master/docs/data/charges_data_daily_citywide.csv"
+download.file(charges_URL, "charges.csv")
+charges<-read.csv("charges.csv")
+```
+
+## Preliminary exploration and processing
+```{r explore}
+summary(arrests)
+arrests$date_value<-as.Date(arrests$date_value)
+range(arrests$date_value)
+dim(arrests)
+arrests<-arrests[order(arrests$date_value),]
+arrests<-arrests[1:nrow(arrests)-1,]
+
+summary(charges)
+dim(charges)
+charges$date_value<-as.Date(charges$date_value)
+range(charges$date_value)
+
+summary(incidents)
+dim(incidents)
+incidents$dispatch_date<-as.Date(incidents$dispatch_date)
+range(incidents$dispatch_date)
+
+
+
+
+
+#arrests$arrest_total<-rowSums(arrests[,2:ncol(arrests)])
+#charges$charges_total<-rowSums(charges[,2:ncol(charges)])
+
+melted_arrests<-melt(arrests, id="date_value")
+
+arrest_totals<-melted_arrests %>%
+  group_by(variable) %>%
+  summarise(count=sum(value))
+arrest_totals<-arrest_totals[order(-arrest_totals$count),]
+
+top_arrests<-arrest_totals$variable[1:10]
+
+arrest_plot<-ggplot(data=filter(melted_arrests, variable %in% top_arrests))+
+  geom_point(aes(x=date_value, y=value, col=variable), alpha=0.2)+
+  geom_smooth(aes(x=date_value, y=value, col=variable))+
+  ggtitle("Arrest counts in 10 most common arrest categories")
+
+melted_charges<-melt(charges, id="date_value")
+
+charge_totals<-melted_charges %>%
+  group_by(variable) %>%
+  summarise(count=sum(value))
+charge_totals<-charge_totals[order(-charge_totals$count),]
+
+charge_plot<-ggplot(data=filter(melted_charges, variable %in% top_arrests))+
+  geom_point(aes(x=date_value, y=value, col=variable), alpha=0.2)+
+  geom_smooth(aes(x=date_value, y=value, col=variable))+
+  ggtitle("Charge counts in 10 most common arrest categories")
+
+arrest_plot
+charge_plot
+```
+
+
+
+
+Now we combine arrests and charges and into one data frame and plot the totals over time.
+```{r}
+charge_sum<-summarise(group_by(melted_charges, date_value), count=sum(value))
+charge_sum$type<-"charge"
+
+arrest_sum<-summarise(group_by(melted_arrests, date_value), count=sum(value))
+arrest_sum$type<-"arrest"
+
+combined_sum<-rbind(charge_sum, arrest_sum)
+
+totals_plot<-ggplot(data=combined_sum)+
+  geom_point(aes(x=date_value, y=count, col=type), alpha=0.15)+
+  geom_smooth(aes(x=date_value, y=count, col=type))
+totals_plot
+```
+
+We create our final dataframe for analysis or arrests/charges, which has, for each date, the number of arrests and charges of each category.
+
+```{r}
+melted_charges$type<-"charge"
+melted_arrests$type<-"arrest"
+
+charge_arrest_data<-rbind(melted_charges, melted_arrests)
+write.csv(charge_arrest_data, "charge_arrest_data.csv")
+
+charge_arrest<-charge_arrest_data
+```
+
+
+Let's explore it a bit more. 
+Explore how to group. How do charge and arrest dates correspond to one another?
+```{r grouping}
+
+totals<-charge_arrest %>%
+  group_by(variable, type) %>%
+  summarise(count=sum(value))
+totals<-totals[order(-totals$count),]
+top_categories<-unique(totals$variable)[1:10]
+
+ggplot(data=filter(charge_arrest, variable %in% top_categories))+
+  geom_point(aes(x=date_value, y=value, color=type), alpha=0.05)+
+  geom_smooth(aes(x=date_value, y=value, color=type))+
+  facet_wrap(~variable, scale="free_y")
+
+
+#Look at differences by date in each category.
+#need to reshape to wide by type: for each variable, show count in arrests and count in charges.
+
+temp<-reshape(charge_arrest, idvar=c("date_value", "variable"), timevar="type", direction="wide")
+temp$diff<-temp$value.arrest-temp$value.charge
+
+View(summarise(group_by(temp, variable), mean=mean(diff), mean_arrest=mean(value.arrest), mean_charge=mean(value.charge)))
+
+ggplot(data=filter(temp, variable %in% top_categories))+
+  geom_line(aes(x=date_value, y=diff))+
+  geom_smooth(aes(x=date_value, y=value.charge), color="red")+
+  geom_smooth(aes(x=date_value, y=value.arrest), color="blue")+
+  facet_wrap(~variable, scale="free_y")
+#geom_point(aes(x=date_value, y=diff), alpha=0.05)
+```
+
+
+
+## Exploring charges, arrests, and incidents
+
+```{r}
+charges_all<-read.csv("charges_all.csv", row.names=1)
+charges_all$date_value<-as.Date(charges_all$date_value)
+arrest_groups<-colnames(charges_all)[2:7]
+charges_groups<-colnames(charges_all)[8:13]
+incidents_groups<-colnames(charges_all)[14:18]
+
+
+data_long<-charges_all%>%
+  melt(id="date_value")
+
+data_long$type<-NA
+data_long[grep("^arrests", data_long$variable), "type"]<-"arrest"
+data_long[grep("^charges", data_long$variable), "type"]<-"charge"
+data_long[grep("^incidents", data_long$variable), "type"]<-"incident"
+data_long$group<-NA
+data_long[grep("violent$", data_long$variable), "group"]<-"violent"
+data_long[grep("property$", data_long$variable), "group"]<-"property"
+data_long[grep("drugs$", data_long$variable), "group"]<-"drugs"
+data_long[grep("firearms$", data_long$variable), "group"]<-"firearms"
+data_long[grep("other$", data_long$variable), "group"]<-"other"
+data_long[grep("uncategorized$", data_long$variable), "group"]<-"uncategorized"
+
+write.csv(data_long, "charges_all_long.csv")
+
+type_per_group_plot<-ggplot(data=data_long)+
+  geom_point(aes(x=date_value, y=value, col=type), alpha=0.01)+
+  geom_smooth(aes(x=date_value, y=value, col=type))+
+  facet_wrap(~group, scale="free_y")
+
+type_per_group_plot
+
+```
+
+
+
