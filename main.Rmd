@@ -5,6 +5,7 @@ date: "3/25/2021"
 output:
   html_document: default
   pdf_document: default
+bibliography: DAbib.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -27,9 +28,9 @@ library(causalsens)
 
 ## Introduction
 
-Elected in November 2017, Philadelphia District Attorney Larry Krasner ran on a platform whose stated top priority was ending mass incarceration in Philadelphia [3]. A self-described progressive DA, Krasner's campaign promised, among other things, to stop prosecuting "insufficient and insignificant cases", to treat addiction as a public safety issue, and to work to stop pursuing extreme sentences [4] [1]. Running for re-election in 2021, Krasner's campaign proclaims a 40% decrease in the county jail population, reductions in sentence length, an end to charging marijuana possession cases, diversion of other drug possession cases to treatment, and a shifting of resources to solving serious crimes, particularly homicides and gun violence. [2]
+Elected in November 2017, Philadelphia District Attorney Larry Krasner ran on a platform whose stated top priority was ending mass incarceration in Philadelphia @Krasner1. A self-described progressive DA, Krasner's campaign promised, among other things, to stop prosecuting "insufficient and insignificant cases", to treat addiction as a public safety issue, and to work to stop pursuing extreme sentences @Austen. Running for re-election in 2021, Krasner's campaign proclaims a 40% decrease in the county jail population, reductions in sentence length, an end to charging marijuana possession cases, diversion of other drug possession cases to treatment, and a shifting of resources to solving serious crimes, particularly homicides and gun violence. @Krasner2
 
-We carry out an observational study to determine the effect of Krasner's tenure and policies as Philadelphia DA on the number of people charged for different types of offenses. Our primary source of data regarding arrests and charges comes from the Philadelphia District Attorney's Office, and includes counts of arrests and charges by categories of offenses from January 1, 2014 to present. In measuring the outcomes from cases subject to the treatment (being charged by Krasner's office), we restrict our focus to the period from June 1, 2018 (6 months after Krasner's election) to March 15, 2020 (prior to the start of the COVID-19 pandemic in Philadelphia). SAY MORE ABOUT DA SETH WILLIAMS HERE.
+We carry out an observational study to determine the effect of Krasner's tenure and policies as Philadelphia DA on the number of people charged for different types of offenses. Our primary source of data regarding arrests and charges comes from the Philadelphia District Attorney's Office, and includes counts of arrests and charges by categories of offenses from January 1, 2014 to present. In measuring the outcomes from cases subject to the treatment (being charged by Krasner's office), we restrict our focus to the period from June 1, 2018 (6 months after Krasner's election) to March 15, 2020 (prior to the start of the COVID-19 pandemic in Philadelphia). 
 
 Both prior to and over the course of Krasner's tenure, the crime rate across various offenses, measured both by incidents reported by Philadelphia and nearby county police agencies to the FBI's Uniform Crime Reporting (UCR) Program and by police arrests reported by the DA's office, has varied substantially. Since the DA's office only enters the criminal justice process after an arrest has been made, we include arrest counts by date across a variety of offense categories among the covariates that we control over. We argue that the most substantial potential confounders effect the charge counts only through their effect on the number of arrests across various categories and that consequently, by controlling for arrests, we produce estimates of the causal effect of Krasner's tenure as DA on the number of charges brough for various offense types.
 
@@ -39,7 +40,7 @@ Since the arrest counts vary between our control group (offenses charged between
 
 The District Attorney's Office typically only gets involved in a case once an arrest has been made (by Philedelphia Police Department or other agency such that jurisdiction for prosecuting the case falls under Philadelphia County). At the first stage of this process, the DA's office decides whether to bring charges and what charges to bring. Subsequently, bail is set by a Bail Magistrate, taking into account input from both the DA's office and the attorney for the defense. In some cases, instead of bringing charges, the DA's office can decide to divert a case into one of various diversionary programs. If charges are brought, a case proceeds through the judicial system to an outcome (verdict, guilty plea, dismissal, or withdrawal). One of the DA's many roles in this part of the process is making plea offers. After an outcome, the case proceeds to sentencing. The judge imposes a sentence with recommendations from the DAO. A single case may have many charges, and distinct charges may have different outcomes. Different outcomes subject to sentencing may receive different sentences, and these sentences may be imposed concurrently with others or consecutively. 
 
-In this document, we are presently interested in the part of the process that involves charges. Charges for offenses correpond to statutes in the Pennsylvania Criminal Law. The publicly availably data from the DAO that we will be using in our analysis counts only the most serious charge (subject to the most severe sentence) for each case. To help our analysis and interpretability, we group the possible charges into six groups based on the DAO's grouping of these charges on their website. These groups, and the kinds of charges that comprise them, are as follows:
+In this document, we are presently interested in the part of the process that involves charges. Charges for offenses correpond to statutes in the Pennsylvania Criminal Law. The publicly availably data from the DAO that we will be using in our analysis counts only the most serious charge (subject to the most severe sentence) for each case. To help our analysis and interpretability, we group the possible charges into six groups based on the DAO's grouping of these charges on their website @DAO. These groups, and the kinds of charges that comprise them, are as follows:
 
 * **Violent charges:** Homicide, Non-fatal shooting, Rape", Robbery with a gun, Robbery (other), Aggravated assault with a gun, Aggravated assault (other), Other assaults, Sexual assaults and other sex offenses
 * **Property charges:** Residential burglary, Commercial burglary, Theft of motor vehicle tag,  Theft from person, Theft from auto, Retail theft", Theft, Auto theft, Fraud Theft of Services, Embezzlement
@@ -48,15 +49,14 @@ In this document, we are presently interested in the part of the process that in
 * **Other charges:** Prostitution or sex work, Patronizing prostitutes, Threats of violence
 * **Uncategorized charges:** All other charges brough by the DAO that do not fall into the categories above.
 
-In the "Exploratory.Rmd" file, we further investigate various frequencies within and between these categories.
 
 ## The data
 
 ### Source of data
 
-The data we use in our observational study is publicly available and was downloaded on March 22, 2021 from the District Attorney's Office GitHub repository. [5] Specifically, we use the data frames consisting of counts of charges and of arrests by date, grouped by categories of offenses which are similar, but not identical to the FBI UCR Program categories of Type I and Type II crime. 
+The data we use in our observational study is publicly available and was downloaded on March 22, 2021 from the District Attorney's Office GitHub repository @DAOdata. Specifically, we use the data frames consisting of counts of charges and of arrests by date, grouped by categories of offenses which are similar, but not identical to the FBI UCR Program categories of Type I and Type II crime. 
 
-Our cleaning and preprocessing (described further in the Preprocessing.rmd file) included the following steps:
+Our cleaning and preprocessing (described further in the cleaning.rmd file) included the following steps:
 
 * Group offenses for charges and arrests into 6 groups (described further below): violent, property, drugs, firearms, other, and uncategorized. Calculate charge and arrest total in each of these categories.
 * Subset the charge and arrest data frames on common values of date_value and merge them by date_value, keeping just the totals for each of the 6 categories. 
@@ -104,7 +104,7 @@ We assume stable unit treatment values (SUTVA); that is, we assume that the outc
 
 As defined above, we also assume that there is only one form of the treatment. This assumption would be violated if during Krasner's tenure as DA, the DAO changed its policies or practices in charging certain kinds of cases. This would be particularly of concern in the first few months of Krasner's tenure as DA when big changes occured in the DAO (for instance, 31 staffers, including prosecutors, left the DAO in the first week of Krasner's tenure). We address this assumption further and conduct a sensitivity analysis in the Discussion section of this document.
 
-We assume that unobserved confounders have negligible impact on our estimates. Unobserved confounders that are of potential concern are ones that have a direct effect on charge counts rather than an indirect one through arrest counts. These could include quality of policy reports and evidence-gathering, prior criminal records of defendants, defendant demographics, and local, state, or federal policies regarding charges for certain types of offenses. The data available to us does not contain many of these. We address how robust our analysis is to their impact through sensitivity analyses in the Discussion section below.
+We assume that unobserved covariates have negligible impact on our estimates. Unobserved covariates that are of potential concern are ones that have a direct effect on charge counts rather than an indirect one through arrest counts. These could include quality of policy reports and evidence-gathering, prior criminal records of defendants, defendant demographics, and local, state, or federal policies regarding charges for certain types of offenses. The data available to us does not contain many of these. We address how robust our analysis is to their impact through sensitivity analyses in the Discussion section below.
 
 Finally, we assume there is no post-treatment bias; that is, the distribution of arrest counts does not vary with treatment assignment. At first glance, days charged during Krasner's tenure as DA have a different distribution of arrests from days charged prior to Krasner's tenure as DA. However, we recall that our definition of treatment is quite narrow: we say that a unit (day) in our study has received the treatment if the cases on that day were charged by Krasner's office, and a unit has received the control if the cases were charged by Williams' office. In particular, our definition of treatment does not include any actions by the DAO or anyone else that effect arrests: for each individual unit, arrest counts are pre-treatment covariates and are uneffected by the treatment assignment. While the DAO could very well have a causal effect on arrest counts by, for instance, instituting a policy of not charging certain kinds of offenses causing the police not to make arrests for those offenses, this kind of action of the DAO does not fall within our definition of treatment, and so is not measured by our causal estimates. We are simply measuring the effect of Krasner's DAO on charging the arrests they are given. Any other effects of the DAO on charges are outside the scope of our study.
 
@@ -126,7 +126,6 @@ ggplot(data=all_dates_long, aes(x=date_value, y=value, col=type))+
   facet_wrap(~group, scale="free_y")
 ```
 
-WRITE MORE ABOUT THE DROP IN UNCATEGORIZED--COMPARE TO CATEGORIES OF PART I and PART II CRIME.
 
 Next, we restrict our focus to the time periods of our control group (2014-01-01 to 2017-06-29) and our treatment group (2018-01-01 to 2020-03-15) and show the control and treatment means for arrests and charges by type, along with the percent in change from the control mean.
 
@@ -154,7 +153,7 @@ ggplot(data=means, aes(x=group, y=percent_diff_in_means, fill=type))+
 
 ## Matching
 
-Our causal effect estimates will come from fitting a linear model, controlling for arrest count covariates for each of our six types of offenses. Before fitting the model, in this section we employ matching to account for imbalance of covariates in our treatment and control groups. First, here is a plot of the distributions of mean arrest counts by type, along with a QQ plot for each plot:
+Our causal effect estimates will come from fitting a linear model, controlling for arrest count covariates for each of our six types of offenses. Before fitting the model, in this section we employ matching to account for imbalance of covariates in our treatment and control groups, following @HIKS. First, here is a plot of the distributions of mean arrest counts by type, along with a QQ plot for each plot:
 
 ```{r balance plots}
 arrest_count_sum<-charges_all_long %>%
@@ -185,7 +184,7 @@ for (g in unique(charges_all_long$group))
 We see imbalance for some of the arrest types, particularly property, drugs, and other.
 
 
-To address this imbalance, we implementing matching on propensity scores. Following [6] and appealing to the "propensity score tautology", our sole concern is achieving balance on the covariates, and so whatever matching method we implement that yields our desired level of balance will do the job. We experimented with a variety of matching methods (further detailed in the "Matching.Rmd" document), and we found there to be somewhat of a tradeoff between sample sizes of matched data and balance. For example, using subclassification matching with 6 classes, we were able to get good balance, but at the expense of one of the subclasses having as few as 19 control units. 
+To address this imbalance, we implementing matching on propensity scores. Following @HIKS and appealing to the "propensity score tautology", our sole concern is achieving balance on the covariates, and so whatever matching method we implement that yields our desired level of balance will do the job. We experimented with a variety of matching methods (further detailed in the "Matching.Rmd" document), and we found there to be somewhat of a tradeoff between sample sizes of matched data and balance. For example, using subclassification matching with 6 classes, we were able to get good balance, but at the expense of one of the subclasses having as few as 19 control units. 
 
 We ended up settling on variable ratio nearest-neighbor matching with calipers of size 0.1 (standard deviations of the propensity scores within which to draw matches). Since the higher end of the propensity score distribution was overrepresented in the treatment group, the price we paid for our balance was about 31% of our treated observations going unmatched. DISCUSSION WHY THIS IS OK. We conduct further sensitivity analyses and argue that our analysis is robust to this choice in the Discussion section below.
 
@@ -360,19 +359,22 @@ select(effect_sum, "treatment_effect", "confmin", "confmax", "treatment_effect_r
 
 While we see some small changes in our estimates, our confidence intervals still do not contain zero, and we come to the same broad conclusions as before. 
 
-Next, we consider possible bias in our estimates introduced by our matching procedure, particularly the fact that we discarded treatment units in forming our matched data. First, we note that achieving good balance on covariates reduces interpolation bias (as defined in King and Zeng [CITE]). Since we are calculating the average treatment effect (ATE) and not the average treatment effect on the treated (ATT), we not need to worry that dropping treated units changes the population for which we make our estimates. However, by dropping both treatment and control units, there is potential that we introduce extrapoation bias into the study. 
+Next, we consider possible bias in our estimates introduced by our matching procedure, particularly the fact that we discarded treatment units in forming our matched data. First, we note that achieving good balance on covariates reduces interpolation bias (as defined in @KZ). Since we are calculating the average treatment effect (ATE) and not the average treatment effect on the treated (ATT), we not need to worry that dropping treated units changes the population for which we make our estimates. However, by dropping both treatment and control units, there is potential that we introduce extrapoation bias into the study. 
 
 First, we argue this is not a concern in our study. The reason is that we assume that the DAO's decisions to charge individual cases are independent of the volume or distribution of the other cases (arrests) from that day. Consequently, we argue that we can extrapolate causal effects computed from days with a very distribution of types and counts or arrests to days with very different distributions and counts of arrests. Consequently, discarding some of our treatment units with propensity scores that are harder to match should not introduce significant extrapolation bias as the units were discarded on the basis of arrest covariates (via propensity scores)  and not on the basis of outcomes.
 
 However, to check that our analysis is robust to changes in the matching mechanism, we report the results of several other matching methods that were employed. The code for these is contained in the appendix.
 
-To assess our assumption of ignorability, we employ a sensitivity analysis method developed by Blackwell [CITE]. We measure sensitivity to one-sided selection bias: that is, the amount of an unmeasured confounder could increase (or decrease) charge counts, controlling for arrests, in the treatment group (cases post 2018) compared to the control group (pre-2018). Such confounding would exist if, for instance, quality of police reports or prior records of arrestees changed between or during the two DA administrations, making arrestees more or less susceptible to charges. Following Blackwell's method, for each amount of confounding (alpha), we assess whether this would reverse our conclusion that having Krasner's DAO charge cases results in a statistically significant change in number of charge in each category, controlling for arrests. We report the amount of confounding that would be needed to reverse our conclusion.
+To assess our assumption of ignorability, we employ a sensitivity analysis method developed by Blackwell @Blackwell. We measure sensitivity to one-sided selection bias: that is, the amount of an unmeasured confounder could increase (or decrease) charge counts, controlling for arrests, in the treatment group (cases post 2018) compared to the control group (pre-2018). Such confounding would exist if, for instance, quality of police reports or prior records of arrestees changed between or during the two DA administrations, making arrestees more or less susceptible to charges. Following Blackwell's method, for each amount of confounding (alpha), we assess whether this would reverse our conclusion that having Krasner's DAO charge cases results in a statistically significant change in number of charge in each category, controlling for arrests. We report the amount of confounding that would be needed to reverse our conclusion.
 
 
 ```{r sensitivity}
 
 
-model.t<-glm(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data2, family=binomial())
+model.t<-glm(treatment~arrests_violent+arrests_property+
+               arrests_drugs+arrests_firearms+arrests_other+
+               arrests_uncategorized, data=matched_data2, 
+             family=binomial())
 
 alpha_violent_1=seq(-8, 2, by=0.01)
 sens_violent_1 <- causalsens(lm_violent, model.t, 
@@ -464,13 +466,3 @@ We see that our conclusions for property, other, and uncategorized offenses are 
 
 
 
-
-## Citations
-
-Stuff to cite:
-[1] https://web.archive.org/web/20171013182105/https://krasnerforda.com/
-[2] https://krasnerforda.com/promises-kept
-[3] https://ballotpedia.org/Lawrence_Krasner
-[4] https://www.nytimes.com/2018/10/30/magazine/larry-krasner-philadelphia-district-attorney-progressive.html
-[5] https://github.com/phillydao/phillydao-public-data/tree/master/docs/data
-[6] Matching as Nonparametric Preprocessing for Reducing Model Dependence in Parametric Causal Inference, Ho, Imai, King, and Stuart
