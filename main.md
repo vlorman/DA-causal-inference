@@ -1,92 +1,101 @@
-Estimating the causal effects of Krasner’s tenure as District Attorney
-on criminal charges
+Estimating the effect of Krasner’s tenure as District Attorney on
+criminal charges
 ================
 Vitaly Lorman
 3/25/2021
 
 ## Introduction
 
-Elected in November 2017, Philadelphia District Attorney Larry Krasner
-ran on a platform whose stated top priority was ending mass
+Elected in November 2017, Philadelphia District Attorney (DA) Larry
+Krasner ran on a platform whose stated top priority was ending mass
 incarceration in Philadelphia (“Krasner for Da,” n.d.). A self-described
 progressive DA, Krasner’s campaign promised, among other things, to stop
 prosecuting “insufficient and insignificant cases”, to treat addiction
 as a public safety issue, and to work to stop pursuing extreme sentences
-Austen (2018). Running for re-election in 2021, Krasner’s campaign
-proclaims a 40% decrease in the county jail population, reductions in
-sentence length, an end to charging marijuana possession cases,
-diversion of other drug possession cases to treatment, and a shifting of
-resources to solving serious crimes, particularly homicides and gun
-violence. (“Krasner for Da: Promises Kept,” n.d.)
+(Austen 2018). Running for re-election in 2021, Krasner’s campaign
+proclaimed a 40% decrease in the Philadelphia county jail population,
+reductions in sentence length, an end to charging marijuana possession
+cases, diversion of other drug possession cases to treatment, and a
+shifting of resources to solving serious crimes, particularly homicides
+and gun violence (“Krasner for Da: Promises Kept,” n.d.).
 
 We carry out an observational study to determine the effect of Krasner’s
-tenure and policies as Philadelphia DA on the number of people charged
-for different types of offenses. Our primary source of data regarding
-arrests and charges comes from the Philadelphia District Attorney’s
-Office, and includes counts of arrests and charges by categories of
-offenses from January 1, 2014 to present. In measuring the outcomes from
-cases subject to the treatment (being charged by Krasner’s office), we
-restrict our focus to the period from June 1, 2018 (6 months after
-Krasner’s election) to March 15, 2020 (prior to the start of the
-COVID-19 pandemic in Philadelphia).
+tenure and policies as Philadelphia DA on the number of charges for
+different types of offenses. Our primary source of data regarding
+arrests and charges comes from the Philadelphia DA’s Office (DAO), and
+includes counts of arrests and charges by categories of offenses from
+January 1, 2014 to present. In measuring the outcomes from cases subject
+to the treatment (being charged by Krasner’s office), we restrict our
+focus to the period from January 1, 2018 (the beginning of Krasner’s
+term) to March 15, 2020 (prior to the start of the COVID-19 pandemic in
+Philadelphia). Our control group consists of cases charged by Krasner’s
+predecessor, DA Seth Williams, between January 1, 2014 and June 29,
+2017. (Williams resigned from office when he pleaded guilty to bribery
+on June 29, and we exclude cases charged during the six month term of
+interim DA Kelley B. Hodge from our analysis.)
 
 Both prior to and over the course of Krasner’s tenure, the crime rate
 across various offenses, measured both by incidents reported by
 Philadelphia and nearby county police agencies to the FBI’s Uniform
 Crime Reporting (UCR) Program and by police arrests reported by the DA’s
-office, has varied substantially. Since the DA’s office only enters the
-criminal justice process after an arrest has been made, we include
-arrest counts by date across a variety of offense categories among the
-covariates that we control over. We argue that the most substantial
-potential confounders effect the charge counts only through their effect
-on the number of arrests across various categories and that
-consequently, by controlling for arrests, we produce estimates of the
-causal effect of Krasner’s tenure as DA on the number of charges brough
-for various offense types.
+office, has varied substantially. Since the DA’s office typically only
+enters the criminal justice process after an arrest has been made, we
+control for arrest counts by date across a variety of offense
+categories. We argue that the most substantial potential covariates that
+effect charge counts do so only through their effect on the number of
+arrests across various categories and that consequently, by controlling
+for arrests, we produce estimates of the effect of Krasner’s tenure as
+DA on the number of charges brough for various offense types.
 
 Since the arrest counts vary between our control group (offenses charged
-between January 2014 and June 2017) and treatment group (offenses
-charged between June 2018 and March 2015), we mitigate potential bias by
-employing matching as part of our preprocessing prior to estimating
-causal effects using linear regression. Our results consist of estimates
-of causal effects (together with confidence intervals) of Krasner’s
-tenure as DA on the number of charges across the following categories:
-violent, property, drugs, firearms, other, and uncategorized. We adopt
-these groupings from those reported by the Philadelphia DA’s Office and
-describe a further refinement of which offenses comprise each category
-in our description of the data below. We state our assumptions, conduct
-some sensitivity analyses, and conclude with a discussion of future work
-that could be carried out to improve our causal estimates.
+by DA Williams) and treatment group (offenses charged by DA Krasner), we
+mitigate potential bias by employing matching as part of our
+preprocessing. Our results consist of estimates of effects (together
+with confidence intervals) of Krasner’s tenure as DA on the number of
+charges across the following categories: violent, property, drugs,
+firearms, other, and uncategorized. We adopt these groupings from those
+reported by the Philadelphia DA’s Office and describe a further
+refinement of which offenses comprise each category in our description
+of the data below. We state our assumptions, conduct sensitivity
+analyses, and conclude with a discussion of future work that could be
+carried out to improve our causal estimates.
 
 ## Background on the criminal justice process in Philadelphia
 
-The District Attorney’s Office typically only gets involved in a case
-once an arrest has been made (by Philedelphia Police Department or other
-agency such that jurisdiction for prosecuting the case falls under
-Philadelphia County). At the first stage of this process, the DA’s
-office decides whether to bring charges and what charges to bring.
-Subsequently, bail is set by a Bail Magistrate, taking into account
-input from both the DA’s office and the attorney for the defense. In
-some cases, instead of bringing charges, the DA’s office can decide to
-divert a case into one of various diversionary programs. If charges are
-brought, a case proceeds through the judicial system to an outcome
-(verdict, guilty plea, dismissal, or withdrawal). One of the DA’s many
-roles in this part of the process is making plea offers. After an
-outcome, the case proceeds to sentencing. The judge imposes a sentence
-with recommendations from the DAO. A single case may have many charges,
-and distinct charges may have different outcomes. Different outcomes
-subject to sentencing may receive different sentences, and these
-sentences may be imposed concurrently with others or consecutively.
+The DAO typically only gets involved in a case once an arrest has been
+made (by either the Philedelphia Police Department or another agency
+such that jurisdiction for prosecuting the case falls under Philadelphia
+County). At the first stage of this process, the DAO decides whether to
+bring charges and what charges to bring. Subsequently, bail is set by a
+Bail Magistrate, taking into account input from both the DA’s office and
+the attorney for the defense. In some cases, instead of bringing
+charges, the DAO may decide to divert a case into one of various
+diversionary programs. If charges are brought, a case proceeds through
+the judicial system to an outcome (verdict, guilty plea, dismissal, or
+withdrawal). One of the DA’s many roles in this part of the process is
+making plea offers. After an outcome, the case proceeds to sentencing.
+The judge imposes a sentence with recommendations from the DAO. A single
+case may have many charges, and distinct charges may have different
+outcomes. Different outcomes subject to sentencing may receive different
+sentences, and these sentences may be imposed concurrently or
+consecutively.
 
-In this document, we are presently interested in the part of the process
-that involves charges. Charges for offenses correpond to statutes in the
-Pennsylvania Criminal Law. The publicly availably data from the DAO that
-we will be using in our analysis counts only the most serious charge
-(subject to the most severe sentence) for each case. To help our
-analysis and interpretability, we group the possible charges into six
-groups based on the DAO’s grouping of these charges on their website
-(“Philadelphia Dao Data Dashboard,” n.d.). These groups, and the kinds
-of charges that comprise them, are as follows:
+In this document, we are interested in the part of the process that
+involves charges (which correspond to statutes in the Pennsylvania
+Criminal Law). The reason we are interested in charges is because how
+and whether a cases is charged is typically the first decision made by
+the DAO, and it occurs before many other actors (defense lawyers,
+judges, etc.) enter the process; thus, it is also the outcome for which
+we are able to study the effect of Krasner’s DAO with the fewest
+potential confounders.
+
+The publicly availably data from the DAO that we will be using in our
+analysis counts only the most serious charge (subject to the most severe
+sentence) for each case. To help our analysis and interpretability, we
+group the possible charges into six groups based on the DAO’s grouping
+of these charges on their website (“Philadelphia Dao Data Dashboard,”
+n.d.). These groups, and the kinds of charges that comprise them, are as
+follows:
 
   - **Violent charges:** Homicide, Non-fatal shooting, Rape", Robbery
     with a gun, Robbery (other), Aggravated assault with a gun,
@@ -119,67 +128,37 @@ file) included the following steps:
 
   - Group offenses for charges and arrests into 6 groups (described
     further below): violent, property, drugs, firearms, other, and
-    uncategorized. Calculate charge and arrest total in each of these
-    categories.
+    uncategorized by date. Calculate daily charge and arrest total in
+    each of these categories.
   - Subset the charge and arrest data frames on common values of
     date\_value and merge them by date\_value, keeping just the totals
     for each of the 6 categories.
   - Filter to include only dates prior to 2017-06-29 and after
-    2018-06-01. Filter out dates after 2020-03-15 (to exclude judicial
+    2018-01-01. Filter out dates after 2020-03-15 (to exclude judicial
     actions after the COVID-19 pandemic began effecting the Philadelphia
     courts). Create a binary treatment variable, assigning it to be
-    fALSE for dates prior to when Krasner took office and TRUE for dates
+    FALSE for dates prior to when Krasner took office and TRUE for dates
     after. This produces the data frame “charges\_all”
-  - We also reshape into a long data frame with columns date\_value,
-    type (arrest or chage), group (violent, property, drugs, firearms,
-    other, or uncategorized) and the counts for each combination of the
-    these. This data frame is called “charges\_all\_long” below.
+  - Reshape into a long data frame with columns date\_value, type
+    (arrest or chage), group (violent, property, drugs, firearms, other,
+    or uncategorized) and the counts for each combination of the these.
+    This data frame is called “charges\_all\_long” below.
 
-We read in the resulting datasets and summarise.
+We read in the resulting datasets.
 
 ``` r
 charges_all<-read.csv("charges_all.csv", row.names=1)
 charges_all_long<-read.csv("charges_all_long.csv", row.names=1)
 charges_all$date_value<-as.Date(charges_all$date_value)
 charges_all_long$date_value<-as.Date(charges_all_long$date_value)
-
-summary(charges_all)
 ```
-
-    ##    date_value         arrests_violent arrests_property arrests_drugs   
-    ##  Min.   :2014-01-01   Min.   : 5.00   Min.   : 1.00    Min.   :  2.00  
-    ##  1st Qu.:2015-06-04   1st Qu.:20.00   1st Qu.:11.00    1st Qu.: 28.00  
-    ##  Median :2016-11-05   Median :24.00   Median :15.00    Median : 39.00  
-    ##  Mean   :2017-01-15   Mean   :25.39   Mean   :15.98    Mean   : 40.73  
-    ##  3rd Qu.:2018-10-11   3rd Qu.:30.00   3rd Qu.:20.00    3rd Qu.: 52.00  
-    ##  Max.   :2020-03-14   Max.   :88.00   Max.   :96.00    Max.   :125.00  
-    ##  arrests_firearms arrests_other    arrests_uncategorized charges_violent
-    ##  Min.   : 0.000   Min.   : 0.000   Min.   : 3.00         Min.   : 6.00  
-    ##  1st Qu.: 2.000   1st Qu.: 1.000   1st Qu.:20.00         1st Qu.:20.00  
-    ##  Median : 3.000   Median : 3.000   Median :25.00         Median :25.00  
-    ##  Mean   : 3.478   Mean   : 3.565   Mean   :25.01         Mean   :26.24  
-    ##  3rd Qu.: 5.000   3rd Qu.: 5.000   3rd Qu.:30.00         3rd Qu.:31.50  
-    ##  Max.   :22.000   Max.   :24.000   Max.   :51.00         Max.   :94.00  
-    ##  charges_property charges_drugs    charges_firearms charges_other   
-    ##  Min.   :  1.00   Min.   :  2.00   Min.   : 0.000   Min.   : 0.000  
-    ##  1st Qu.: 11.00   1st Qu.: 26.00   1st Qu.: 2.000   1st Qu.: 1.000  
-    ##  Median : 15.00   Median : 38.00   Median : 3.000   Median : 2.000  
-    ##  Mean   : 16.46   Mean   : 39.59   Mean   : 3.408   Mean   : 3.195  
-    ##  3rd Qu.: 20.00   3rd Qu.: 52.00   3rd Qu.: 5.000   3rd Qu.: 5.000  
-    ##  Max.   :147.00   Max.   :114.00   Max.   :17.000   Max.   :38.000  
-    ##  charges_uncategorized treatment      
-    ##  Min.   : 1.00         Mode :logical  
-    ##  1st Qu.: 8.00         FALSE:1275     
-    ##  Median :11.00         TRUE :804      
-    ##  Mean   :11.84                        
-    ##  3rd Qu.:15.00                        
-    ##  Max.   :52.00
 
 ## Observational study design
 
 We set up our observational study such that a single unit consists of a
 day on which criminal charges in the Philadelphia Municipal Court or
-Common Pleas court could be brought within a specified range of dates.
+Common Pleas court could be brought between January 1, 2014 and June 29,
+2017, as well as between January 1, 2018 and March 15, 2020.
 
 ### Treatment
 
@@ -196,10 +175,10 @@ Our treatment is strictly defined whether Krasner’s office charges the
 cases on a given day. See the Assumptions section for further discussion
 of this.
 
-Also note that we are not studying the causal effect of Krasner himself
-but the effect of the entire DAO under Krasner’s leadership (as opposed
-to the control of the DAO under Williams’ leadership). We view the
-treatment as binary (see the Discussion section for more on this).
+Also note that we are not studying the effect of Krasner himself but the
+effect of the entire DAO under Krasner’s leadership (as opposed to the
+control of the DAO under Williams’ leadership). We view the treatment as
+binary (see the Discussion section for more on this).
 
 ### Outcomes
 
@@ -207,9 +186,9 @@ As discussed above, we group offenses into six groups (violent,
 property, drugs, firearms, other, and uncategorized). Our outcomes of
 interest are, for each offense type, the number of cases in which a
 charge of that type was brought as the most serious charge in that case.
-We measure outcomes as a difference in means between treatment and
+We measure outcomes as a difference in daily means between treatment and
 control group as well as a percent change relative to the control group
-mean.
+daily mean.
 
 ## Covariates
 
@@ -221,79 +200,82 @@ records of defendants, police department policies, and DA office policy
 and practice regarding charges. The DAO is the final actor in a
 complicated process.
 
-For most of the covariates that come prior to the DAO’s role in the
+For most of the factors that come prior to the DAO’s role in the
 process, their effect on our outcomes of interest (mean daily charges by
 offense category) is indirect and goes through the number of arrests.
 For instance, policy department policies regarding whether to make
 arrests for a given type of offense and how actively to pursue enforcing
 it will only effect charges through the number of arrests made for that
 type of offense. Thus, our covariates consist of daily arrest totals by
-offense category. By conditioning on these, we remove confounding by
+offense category. By conditioning on these, we address confounding by
 many of the factors mentioned above.
 
 ### Assumptions
 
 We assume stable unit treatment values (SUTVA); that is, we assume that
-the outcomes of one unit (that is, the count of most serious charges in
-cases from one day by type) do not vary with the treatments assigned to
-other units. In other words, given a day, the charge counts from that
-day do not vary depending on whether the cases from a different day were
-by Krasner’s office or Williams’. This assumption could be violated in
-the case of reoffenders if the past criminal record of a defendant had
-an effect on the sorts of charges that were brought in their case. We
+the outcomes of one unit (the count of most serious charges in cases
+from one day by type) do not vary with the treatments assigned to other
+units. In other words, given a day, the charge counts from that day do
+not vary depending on whether the cases from a different day were by
+Krasner’s office or Williams’. This assumption could be violated in the
+case of reoffenders if the past criminal record of a defendant had an
+effect on the sorts of charges that were brought in their case. We
 assume that the effect of such instances is negligible, though a data
-set that contained information on reoffenders would lead to a more
-refined analysis.
+set that contained information on reoffenders would be necessary to test
+this assumption.
 
-As defined above, we also assume that there is only one form of the
-treatment. This assumption would be violated if during Krasner’s tenure
-as DA, the DAO changed its policies or practices in charging certain
-kinds of cases. This would be particularly of concern in the first few
-months of Krasner’s tenure as DA when big changes occured in the DAO
-(for instance, 31 staffers, including prosecutors, left the DAO in the
-first week of Krasner’s tenure). We address this assumption further and
+We also assume that there is only one form of the treatment. This
+assumption would be violated if during Krasner’s tenure as DA, the DAO
+changed its policies or practices in charging certain kinds of cases.
+This would be particularly of concern in the first few months of
+Krasner’s tenure as DA when big changes occured in the DAO (for
+instance, 31 staffers, including prosecutors, left the DAO in the first
+week of Krasner’s tenure). We address this assumption further and
 conduct a sensitivity analysis in the Discussion section of this
 document.
 
-We assume that unobserved covariates have negligible impact on our
-estimates. Unobserved covariates that are of potential concern are ones
-that have a direct effect on charge counts rather than an indirect one
-through arrest counts. These could include quality of policy reports and
-evidence-gathering, prior criminal records of defendants, defendant
-demographics, and local, state, or federal policies regarding charges
-for certain types of offenses. The data available to us does not contain
-many of these. We address how robust our analysis is to their impact
-through sensitivity analyses in the Discussion section below.
+We assume that unobserved confounders have negligible impact on our
+estimates; that is, we make an ignorability assumption that, controlling
+for observed covariates, treatment assignment is independent of the
+potential outcomes. Unobserved confounders that are of potential concern
+are ones that have a direct effect on charge counts rather than an
+indirect one through arrest counts. These could include quality of
+policy reports and evidence-gathering, prior criminal records of
+defendants, defendant demographics, and local, state, or federal
+policies regarding charges for certain types of offenses. The data
+available to us does not contain many of these. We address how robust
+our analysis is to their impact through sensitivity analyses in the
+Discussion section.
 
 Finally, we assume there is no post-treatment bias; that is, the
 distribution of arrest counts does not vary with treatment assignment.
-At first glance, days charged during Krasner’s tenure as DA have a
-different distribution of arrests from days charged prior to Krasner’s
-tenure as DA. However, we recall that our definition of treatment is
-quite narrow: we say that a unit (day) in our study has received the
-treatment if the cases on that day were charged by Krasner’s office, and
-a unit has received the control if the cases were charged by Williams’
-office. In particular, our definition of treatment does not include any
-actions by the DAO or anyone else that effect arrests: for each
-individual unit, arrest counts are pre-treatment covariates and are
-uneffected by the treatment assignment. While the DAO could very well
-have a causal effect on arrest counts by, for instance, instituting a
-policy of not charging certain kinds of offenses causing the police not
-to make arrests for those offenses, this kind of action of the DAO does
-not fall within our definition of treatment, and so is not measured by
-our causal estimates. We are simply measuring the effect of Krasner’s
-DAO on charging the arrests they are given. Any other effects of the DAO
-on charges are outside the scope of our study.
+Days charged during Krasner’s tenure as DA appear to have a different
+distribution of arrests from days charged prior to Krasner’s tenure as
+DA. However, we recall that our definition of treatment is narrow: we
+say that a unit (day) in our study has received the treatment if the
+cases on that day were charged by Krasner’s office, and a unit has
+received the control if the cases were charged by Williams’ office. In
+particular, our definition of treatment does not include any actions by
+the DAO or anyone else that effect arrests: for each individual unit,
+arrest counts are pre-treatment covariates and are uneffected by the
+treatment assignment. While the DAO could well have a effect on arrest
+counts by, for instance, instituting a policy of not charging certain
+kinds of offenses causing the police not to make arrests for those
+offenses, this kind of action of the DAO does not fall within our
+definition of treatment. Instead, we simply estimate the effect of
+Krasner’s DAO on charging the arrests they are given. Any other effects
+of the DAO on charges are outside the scope of our study.
 
 ### Outline of analysis
 
 Our method of analysis will be to use a linear regression to estimate
-the treatment effect on charge counts by type regressing on covariates
-giving arrest counts by type. In order to ensure that the arrest count
-covariates are similarly distributed between the treatment and control
-groups, we implement nearest-neighbor matching with calipers (further
-discussed below). Upon achieving our desired balance, we fit a linear
-model to the matched data to estimate the desired causal effects.
+the treatment effect on charge daily counts for each type regressing on
+daily arrest counts by type. We analyze each type of offense separately.
+In order to ensure that the arrest count covariates are similarly
+distributed between the treatment and control groups, we implement
+nearest-neighbor matching with calipers (further discussed below). Upon
+achieving our desired balance, we fit a linear model to the matched data
+to estimate the desired effects.
 
 ## Summary of trends in the data
 
@@ -308,14 +290,25 @@ all_dates_long<-read.csv("charges_all_long_full.csv", row.names=1)
 all_dates_long$date_value<-as.Date(all_dates_long$date_value)
 
 ggplot(data=all_dates_long, aes(x=date_value, y=value, col=type))+
-  geom_point(alpha=0.03)+
+  geom_point(alpha=0.02)+
   geom_smooth()+
-  facet_wrap(~group, scale="free_y")
+  facet_wrap(~group, scale="free_y")+
+  labs(title="Daily counts of arrests and charges by offense type", x="Date", y="Count")
 ```
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](main_files/figure-gfm/trends-1.png)<!-- -->
+
+The above scatterplots and loess curves show trends in arrests and
+charges. We see that in four of the five categories, charges track
+pretty closely with arrests; the exception is uncategorized
+offenses–this may be a result of the fact that it is broadly defined
+and includes a variety of unrelated types of offenses that do not fit in
+the other groups. We note that both charge and arrest counts for
+violent, property, drug, and other offenses all saw a decrease over the
+course of our timeframe, and firearm charges and arrests increased over
+the same time free, with a steep increase beginning in 2020.
 
 Next, we restrict our focus to the time periods of our control group
 (2014-01-01 to 2017-06-29) and our treatment group (2018-01-01 to
@@ -337,33 +330,56 @@ charge_diffs<-means %>%
   filter(type=="charge") %>%
   select("group", "diff_in_means", "percent_diff_in_means")
 
-charge_diffs
+kable(charge_diffs, caption="Differences in daily means of charge counts")
 ```
 
-    ##           group diff_in_means percent_diff_in_means
-    ## 1         drugs     -5.203693             -12.50911
-    ## 2      firearms      0.746456              23.93089
-    ## 3         other     -2.259318             -55.52488
-    ## 4      property     -6.717053             -35.25250
-    ## 5 uncategorized     -1.782953             -14.23460
-    ## 6       violent     -3.501361             -12.68970
+| group         | diff\_in\_means | percent\_diff\_in\_means |
+| :------------ | --------------: | -----------------------: |
+| drugs         |      \-5.203693 |               \-12.50911 |
+| firearms      |        0.746456 |                 23.93089 |
+| other         |      \-2.259318 |               \-55.52488 |
+| property      |      \-6.717053 |               \-35.25250 |
+| uncategorized |      \-1.782953 |               \-14.23460 |
+| violent       |      \-3.501361 |               \-12.68970 |
+
+Differences in daily means of charge counts
+
+The point estimates displayed in the table show that in each offense
+category except for firearms, there was a decrease in daily charge
+counts from Williams’ to Krasner’s tenure as DA. This was largest, a 56
+percent decrease, in the category of other offenses (which includes
+prostitution and sex work related offenses, as well as threats of
+violence). In the category of firearms, we see a 24 percent increase in
+charges.
 
 ``` r
 ggplot(data=means, aes(x=group, y=percent_diff_in_means, fill=type))+
   geom_bar(position="dodge", stat="identity")
 ```
 
-![](main_files/figure-gfm/group%20means-1.png)<!-- -->
+![](main_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+The barplot above shows the percent difference in means for charges and
+arrests from Williams’ to Krasner’s tenure as DA. We see that for drug,
+firearm, other, and property, and violent offenses, arrests and charges
+both decreased, and for firearms, arrests and charges both increased.
+For uncategorized offenses we see that arrests in charges moved in
+opposite directions.
 
 ## Matching
 
-Our causal effect estimates will come from fitting a linear model,
-controlling for arrest count covariates for each of our six types of
-offenses. Before fitting the model, in this section we employ matching
-to account for imbalance of covariates in our treatment and control
-groups, following Daniel E. Ho and Stuart (2007). First, here is a plot
-of the distributions of mean arrest counts by type, along with a QQ plot
-for each plot:
+Our effect estimates will come from fitting linear models, controlling
+for arrest count covariates for each of our six types of offenses.
+Without any preprocessing to balance the arrest count covariates in the
+treatment and control groups, we might see a biased estimate due to
+different levels of arrest counts by offense type in the treatment and
+control groups. For instance, our scatteplots above show lower daily
+arrest counts for several offense types prior to 2018. Thus, before
+fitting our linear models, in this section we employ matching to account
+for imbalance of covariates in our treatment and control groups
+following (Daniel E. Ho and Stuart 2007). First, here is a plot of the
+distributions of mean arrest counts by type, along with a QQ plot for
+each plot:
 
 ``` r
 arrest_count_sum<-charges_all_long %>%
@@ -409,123 +425,74 @@ scores. Following Daniel E. Ho and Stuart (2007) and appealing to the
 the covariates, and so whatever matching method we implement that yields
 our desired level of balance will do the job. We experimented with a
 variety of matching methods (further detailed in the “Matching.Rmd”
-document), and we found there to be somewhat of a tradeoff between
-sample sizes of matched data and balance. For example, using
-subclassification matching with 6 classes, we were able to get good
-balance, but at the expense of one of the subclasses having as few as 19
-control units.
+document), and we observed a tradeoff between sample sizes of matched
+data and balance. For example, using subclassification matching with 6
+classes, we were able to get good balance, but at the expense of one of
+the subclasses having as few as 19 control units (having started with
+1275 control units).
 
-We ended up settling on variable ratio nearest-neighbor matching with
-calipers of size 0.1 (standard deviations of the propensity scores
-within which to draw matches). Since the higher end of the propensity
-score distribution was overrepresented in the treatment group, the price
-we paid for our balance was about 31% of our treated observations going
-unmatched. DISCUSSION WHY THIS IS OK. We conduct further sensitivity
-analyses and argue that our analysis is robust to this choice in the
-Discussion section below.
+We settled on variable ratio nearest-neighbor matching with calipers of
+size 0.1 (standard deviations of the propensity scores within which to
+draw matches). Since the higher end of the propensity score distribution
+was overrepresented in the treatment group, the price we paid for our
+balance was about 31% of our treated observations going unmatched. The
+Discussion section contains further analysis of this methodological
+choice, and the supplementary “matching.Rmd” file contains summaries for
+the balance we achieved using this matching method, along with an
+exploration of other matching methods.
 
-Here we print the summary of our matching method and a few plots that
-demonstrate
-balance.
+Here we print a few plots that demonstrate the covariate balance our
+matching
+achieves.
 
 ``` r
 mcal1.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.1, ratio=1275/804, min.controls=1, max.controls=3)
 scal1.out <- summary(mcal1.out, standardize = TRUE)
-scal1.out
-```
-
-    ## 
-    ## Call:
-    ## matchit(formula = treatment ~ arrests_violent + arrests_property + 
-    ##     arrests_drugs + arrests_other + arrests_firearms + arrests_uncategorized, 
-    ##     data = charges_all, method = "nearest", caliper = 0.1, ratio = 1275/804, 
-    ##     min.controls = 1, max.controls = 3)
-    ## 
-    ## Summary of Balance for All Data:
-    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
-    ## distance                     0.5432        0.2880          1.1614     1.2204
-    ## arrests_violent             23.6231       26.5059         -0.3895     0.8310
-    ## arrests_property            12.3122       18.3004         -0.9657     0.6218
-    ## arrests_drugs               38.2624       42.2847         -0.2705     0.6301
-    ## arrests_other                2.7873        4.0549         -0.3664     0.8886
-    ## arrests_firearms             3.9639        3.1710          0.3289     1.1302
-    ## arrests_uncategorized       25.9801       24.3937          0.2096     1.1008
-    ##                       eCDF Mean eCDF Max
-    ## distance                 0.3013   0.4819
-    ## arrests_violent          0.0585   0.1692
-    ## arrests_property         0.1113   0.3838
-    ## arrests_drugs            0.0445   0.1427
-    ## arrests_other            0.0573   0.1924
-    ## arrests_firearms         0.0500   0.1591
-    ## arrests_uncategorized    0.0330   0.0988
-    ## 
-    ## 
-    ## Summary of Balance for Matched Data:
-    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
-    ## distance                     0.4517        0.4390          0.0578     1.0869
-    ## arrests_violent             24.5154       24.4619          0.0072     1.0359
-    ## arrests_property            13.9673       14.3285         -0.0582     1.2431
-    ## arrests_drugs               39.5608       39.2465          0.0211     0.7711
-    ## arrests_other                3.1924        3.1951         -0.0008     1.4480
-    ## arrests_firearms             3.5590        3.6010         -0.0174     0.7509
-    ## arrests_uncategorized       25.2686       25.0091          0.0343     0.9290
-    ##                       eCDF Mean eCDF Max Std. Pair Dist.
-    ## distance                 0.0136   0.0563          0.0416
-    ## arrests_violent          0.0096   0.0387          1.0887
-    ## arrests_property         0.0117   0.0538          0.6803
-    ## arrests_drugs            0.0210   0.0696          1.2609
-    ## arrests_other            0.0173   0.0466          1.0641
-    ## arrests_firearms         0.0134   0.0517          0.9621
-    ## arrests_uncategorized    0.0084   0.0321          1.0662
-    ## 
-    ## Percent Balance Improvement:
-    ##                       Std. Mean Diff. Var. Ratio eCDF Mean eCDF Max
-    ## distance                         95.0       58.2      95.5     88.3
-    ## arrests_violent                  98.1       81.0      83.6     77.1
-    ## arrests_property                 94.0       54.2      89.4     86.0
-    ## arrests_drugs                    92.2       43.7      52.9     51.3
-    ## arrests_other                    99.8     -213.5      69.8     75.8
-    ## arrests_firearms                 94.7     -134.0      73.2     67.5
-    ## arrests_uncategorized            83.6       23.4      74.7     67.5
-    ## 
-    ## Sample Sizes:
-    ##               Control Treated
-    ## All           1275.       804
-    ## Matched (ESS)  733.04     551
-    ## Matched        920.       551
-    ## Unmatched      355.       253
-    ## Discarded        0.         0
-
-``` r
+#scal1.out
 plot(scal1.out)
 ```
 
 ![](main_files/figure-gfm/calipers-1.png)<!-- -->
 
+The Love plot above shows the standardized mean difference measure of
+balance for each covariate. The vertical dashed lines are drawn within
+.1 standardized mean difference units of zero, and we see that for each
+covariate, the standardized mean differences between treatment and
+control covariates all fall within this margin of
+zero.
+
 ``` r
 plot(mcal1.out,  type = "jitter", interactive = FALSE)
 ```
 
-![](main_files/figure-gfm/calipers-2.png)<!-- -->
+![](main_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 ``` r
 plot(mcal1.out,  type = "hist")
 ```
 
-![](main_files/figure-gfm/calipers-3.png)<!-- -->
+![](main_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
 
 ``` r
 plot(mcal1.out, type="qq")
 ```
 
-![](main_files/figure-gfm/calipers-4.png)<!-- -->![](main_files/figure-gfm/calipers-5.png)<!-- -->
+![](main_files/figure-gfm/unnamed-chunk-2-3.png)<!-- -->![](main_files/figure-gfm/unnamed-chunk-2-4.png)<!-- -->
 
 ``` r
 matched_data2<-match.data(mcal1.out)
 matched_data2$treatment<-as.numeric(matched_data2$treatment)
 ```
 
-## Fitting a linear model
+The jitter plot above shows that our matching method required dropping
+treatment units from the high end of the propensity score distribution
+and control units from the low end of the propensity score distrbution.
+The histogram shows very similar propensity score distributions between
+treatment and control groups in the matched data, and the QQ plots show
+that matching has resulted in similar distributions not just for
+propensity scores, but for arrest counts for each offense type.
+
+## Fitting linear models
 
 Now that we have achieved balance between treatment and control groups,
 we fit a linear model to the data. For each outcome of interest (charge
@@ -533,7 +500,7 @@ counts for each of the 6 offense groups), we regress on the binary
 treatment variable and the arrest counts for each of the 6 offense
 groups.
 
-We print the summary of each linear model
+We summarize each linear model
 below.
 
 ``` r
@@ -740,12 +707,11 @@ summary(lm_uncategorized)
     ## Multiple R-squared:  0.2874, Adjusted R-squared:  0.284 
     ## F-statistic: 84.28 on 7 and 1463 DF,  p-value: < 2.2e-16
 
-## Results: summary of estimated causal effects
+## Results: summary of estimated effects
 
-In the table below, we summarise our estimated causal effect for each
-offense group. We report the mean effect as well as the 95% confidence
-interval in both absolute counts and as percent change relative to the
-control
+In the table below, we summarise our estimated effect for each offense
+group. We report the mean effect as well as the 95% confidence interval
+in both absolute counts and as percent change relative to the control
 mean.
 
 ``` r
@@ -774,27 +740,21 @@ effect_sum<-cbind(effect_sum,
                     filter(means, type=="charge")[c(6, 4, 1, 2, 3, 5),"control"])
 
 colnames(effect_sum)[5:7]<-c("percent_treatment_effect", "percent_confmin", "percent_confmax")  
-effect_sum
+kable(effect_sum, caption="Effect estimates and confidence intervals")
 ```
 
-    ##     charge_type  treatment     confmin    confmax percent_treatment_effect
-    ## 1       violent -1.6385268 -2.39362098 -0.8834327                -5.938379
-    ## 2      property -2.9644006 -3.73501604 -2.1937852               -15.557795
-    ## 3         drugs -3.4713957 -4.62640890 -2.3163826                -8.344859
-    ## 4      firearms  0.2494747  0.07312272  0.4258266                 7.997993
-    ## 5         other -1.4172731 -1.62920024 -1.2053459               -34.830825
-    ## 6 uncategorized -2.3176179 -2.77876126 -1.8564745               -18.503211
-    ##   percent_confmin percent_confmax
-    ## 1       -8.675005       -3.201753
-    ## 2      -19.602146      -11.513444
-    ## 3      -11.121385       -5.568332
-    ## 4        2.344266       13.651720
-    ## 5      -40.039135      -29.622515
-    ## 6      -22.184850      -14.821572
+| charge\_type  | treatment\_effect |     confmin |     confmax | percent\_treatment\_effect | percent\_confmin | percent\_confmax |
+| :------------ | ----------------: | ----------: | ----------: | -------------------------: | ---------------: | ---------------: |
+| violent       |       \-1.6385268 | \-2.3936210 | \-0.8834327 |                 \-5.938379 |       \-8.675005 |       \-3.201753 |
+| property      |       \-2.9644006 | \-3.7350160 | \-2.1937852 |                \-15.557795 |      \-19.602146 |      \-11.513444 |
+| drugs         |       \-3.4713957 | \-4.6264089 | \-2.3163826 |                 \-8.344859 |      \-11.121385 |       \-5.568332 |
+| firearms      |         0.2494747 |   0.0731227 |   0.4258266 |                   7.997993 |         2.344266 |        13.651720 |
+| other         |       \-1.4172731 | \-1.6292002 | \-1.2053459 |                \-34.830825 |      \-40.039135 |      \-29.622515 |
+| uncategorized |       \-2.3176179 | \-2.7787613 | \-1.8564745 |                \-18.503211 |      \-22.184850 |      \-14.821571 |
+
+Effect estimates and confidence intervals
 
 ``` r
-#charge_diffs
-
 effect_plot<-ggplot()+
   geom_errorbar(data=effect_sum, mapping=aes(x=charge_type, ymin=percent_confmin, ymax=percent_confmax))+
   geom_point(data=effect_sum, aes(x=charge_type, y=percent_treatment_effect))+
@@ -804,7 +764,7 @@ effect_plot<-ggplot()+
 effect_plot
 ```
 
-![](main_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+![](main_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 In summary, our mean effect estimates are as follows:
 
@@ -821,18 +781,18 @@ In summary, our mean effect estimates are as follows:
   - ***Uncategorized offenses:*** a 18.5% decrease in charges.
 
 In all six categories, we have statistically significant evidence of a
-nonzero causal effect (a decrease in all categories except firearms
+nonzero treatment effect (a decrease in all categories except firearms
 offenses).
 
 Comparing to the point estimates of differences in means (prior to
 controlling for arrest counts), we observe that none of these estimates
 fall within our 95% confidence intervals. For violent, property, drug,
-and other offenses, we find that our estimated causal effect is a
-smaller decrease than the percent change in means. In the case of
-uncategorized offenses, our estimated causal effect is a larger decrease
-than the difference in means. Finally, in the case of firearm offenses,
-the causal effect we estimate is that of a substantially smaller
-increase (about 8%) than the simple difference in means (about 24%).
+and other offenses, we find that our estimated effect is a smaller
+decrease than the percent change in means. In the case of uncategorized
+offenses, our estimated effect is a larger decrease than the difference
+in means. Finally, in the case of firearm offenses, the effect we
+estimate is that of a substantially smaller increase (about 8%) than the
+simple difference in means (about 24%).
 
 ## Discussion
 
@@ -842,22 +802,22 @@ find that after controlling for arrest counts, the effect of being
 charged by Krasner’s office was a decrease in charges in every category
 of offense except for firearms. For firearms offenses, we find that
 after accounting for arrests, which saw during Krasner’s tenure as DA a
-25 percent increase from the pre-Krasner mean, Krasner’s office had the
-effect of a 8% increase in charges.
+25% increase from the pre-Krasner mean, Krasner’s office had the effect
+of a 8% increase in charges.
 
 Next, we discuss potential limitations of our study and examine how
 robust our study is to violations of our assumptions and model choices
 through some sensitivity analyses.
 
-First, we recall that our estimates are not the entirety of Krasner’s
-DAO’s effect on charges. For instance, a decision early in Krasner’s
-tenure to drop all marijuana possession charges may well have had an
-effect on PPD policy on whether to make arrests in cases of marijuana
-possession. Thus, by its effect on arrests, Krasner’s DAO may have had
-an additional effect on the reduction in charges for drug offenses.
-However, any such effect is not included in our estimate–the above
-estimates only apply to what causal effect Krasner’s office had in
-charging the arrests they were given as compared to Williams’ DAO.
+We recall that our estimates are not the entirety of Krasner’s DAO’s
+effect on charges. For instance, a decision early in Krasner’s tenure to
+drop all marijuana possession charges may well have had an effect on PPD
+policy on whether to make arrests in cases of marijuana possession.
+Thus, by its effect on arrests, Krasner’s DAO may have had an additional
+effect on the reduction in charges for drug offenses. However, any such
+effect is not included in our estimate–the above estimates only apply to
+what effect Krasner’s office had in charging the arrests they were given
+as compared to Williams’ DAO.
 
 Our assumption that there was only one form of the treatment is almost
 certainly not entirely accurate: changes to charging policy through
@@ -935,14 +895,13 @@ into the study.
 First, we argue this is not a concern in our study. The reason is that
 we assume that the DAO’s decisions to charge individual cases are
 independent of the volume or distribution of the other cases (arrests)
-from that day. Consequently, we argue that we can extrapolate causal
-effects computed from days with a very distribution of types and counts
-or arrests to days with very different distributions and counts of
-arrests. Consequently, discarding some of our treatment units with
-propensity scores that are harder to match should not introduce
-significant extrapolation bias as the units were discarded on the basis
-of arrest covariates (via propensity scores) and not on the basis of
-outcomes.
+from that day. Consequently, we argue that we can extrapolate effects
+computed from days with a very distribution of types and counts or
+arrests to days with very different distributions and counts of arrests.
+Consequently, discarding some of our treatment units with propensity
+scores that are harder to match should not introduce substantial
+extrapolation bias as the units were discarded on the basis of arrest
+covariates (via propensity scores) and not on the basis of outcomes.
 
 However, to check that our analysis is robust to changes in the matching
 mechanism, we report the results of several other matching methods that
@@ -961,7 +920,8 @@ method, for each amount of confounding (alpha), we assess whether this
 would reverse our conclusion that having Krasner’s DAO charge cases
 results in a statistically significant change in number of charge in
 each category, controlling for arrests. We report the amount of
-confounding that would be needed to reverse our conclusion.
+confounding (measured in the original units of numbers of charges) that
+would be needed to reverse our conclusion.
 
 ``` r
 model.t<-glm(treatment~arrests_violent+arrests_property+
@@ -1076,14 +1036,57 @@ The results of our sensitivity analysis are as follows:
     our conclusion that Krasner’s DAO caused a statistically significant
     decrease in uncategorized charges controlling for arrests.
 
-We see that our conclusions for property, other, and uncategorized
-offenses are quite robust to effects of potential unobserved covariates
-and our conclusions for drug and violent offenses are moderately so.
-However, our conclusion that Krasner’s office caused an increase in
-charges for firearms offenses controlling for arrests is quite sensitive
-to the effects of potential unobserved covariates.
+Based on our sensitivity analysis, we conclude that our treatment effect
+estimates for property, other, and uncategorized offenses are robust to
+effects of potential unobserved covariates and our conclusions for drug
+and violent offenses are moderately so. However, our conclusion that
+Krasner’s office caused an increase in charges for firearms offenses
+controlling for arrests is quite sensitive to the effects of potential
+unobserved covariates.
 
-## Appendix: other matching methods
+In conclusion, our analysis shows that Krasner’s DAO had a statistically
+significant effect on the number of cases charged for each offense type,
+a decrease in 5 of 6 categories. None of these estimates are as large in
+magnitude as simple point estimates (prior to controlling for arrests)
+would suggest. The largest estimated effect we observe is a 34.8%
+decrease in charges for other offenses (sex work related offenses and
+threats of violence), followed by a 15.6 percent decrease in charges for
+property related offenses. For firearms offenses, despite the fact that
+arrests increased steeply during roughly the same time frame as charges,
+we find that the effect of Krasner’s DAO was an 8% increase in charges.
+However, our sensitivity analysis suggests that an unobserved covariate
+would only have to be responsible for a small change in charge counts to
+reverse this conclusion.
+
+## Future Directions
+
+Our sensitivity analysis above suggests that the extent to which our
+ignorability assumption holds could reverse our conclusion, particularly
+that Krasner’s DAO was responsible for an increase in firearms charges.
+If we had more data on potential factors that effect charges such as
+prior criminal records of defendants, changes to state laws and policies
+regarding how arrests are charged, and quality of police reports and
+data provided to the DAO, we would be better able to evaluate this
+assumption.
+
+The longitudinal nature of our data also suggests that a model that
+takes this into account could provide more accurate effect estimates.
+For instance, an interrupted time series model could be well suited for
+this problem. One challenge is the lack of a control population post
+2018 (after Krasner took office). Future work in this direction could
+proceed by finding charge and arrest data from a comparison population
+in a different city which did not experience a change in DA during our
+time-frame and use this in an interrupted time series framework.
+
+Finally, beyond charges, the DAO plays a substantial role later in the
+criminal justice process, particularly in the bail process, diversionary
+programs, and sentencing. It would be interesting to implement some of
+these methods (controlling for the actions of other actors, such as
+judges, in the process) to estimate the effects of Krasner’s DAO in
+these areas. Such studies would create a more comprehensive picture of
+Krasner’s DAO’s effect on the criminal justice system in Philadelphia.
+
+## Bibliography
 
 <div id="refs" class="references">
 
