@@ -1,28 +1,11 @@
----
-title: "Cleaning and preprocessing"
-author: "Vitaly Lorman"
-date: "3/25/2021"
-output: 
-  github_document:
-  number_sections: true
-bibliography: DAbib.bib
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r, include=FALSE}
-library(tidyverse)
-library(knitr)
-library(lubridate)
-library(scales)
-library(reshape2)
-```
+Cleaning and preprocessing
+================
+Vitaly Lorman
+3/25/2021
 
 ## Reading in the data
 
-```{r download}
+``` r
 arrests_URL<-"https://github.com/phillydao/phillydao-public-data/raw/master/docs/data/arrest_data_daily_citywide.csv"
 download.file(arrests_URL, "arrests.csv")
 arrests<-read.csv("arrests.csv")
@@ -42,12 +25,17 @@ charges$date_value<-as.Date(charges$date_value)
 #incidents_data$dispatch_date<-as.Date(incidents_data$dispatch_date)
 ```
 
-##Preprocessing
+\#\#Preprocessing
 
 ### Grouping charge/arrest types
 
-1. Group offenses for charges and arrests into 6 groups: violent, property, drugs, firearms, other, and uncategorized. Calculate charge and arrest total in each of these categories.
-```{r grouping outcomes}
+1.  Group offenses for charges and arrests into 6 groups: violent,
+    property, drugs, firearms, other, and uncategorized. Calculate
+    charge and arrest total in each of these categories.
+
+<!-- end list -->
+
+``` r
 violent_ca<-c("Homicide", "Non.Fatal.Shooting", "Rape", "Robbery.Gun",
            "Robbery.Other", "Aggravated.Assault.Gun", "Aggravated.Assault.Other",
            "Other.Assaults", "Sexual.Assault.and.Other.Sex.Offenses")
@@ -82,8 +70,13 @@ charges$charges_uncategorized<-charges[,uncategorized_ca]
 #incidents<-incidents_wide
 ```
 
-2. Subset the charge and arrest data frames on common values of date_value and merge them by date_value, keeping just the totals for each of the 6 categories. 
-```{r}
+2.  Subset the charge and arrest data frames on common values of
+    date\_value and merge them by date\_value, keeping just the totals
+    for each of the 6 categories.
+
+<!-- end list -->
+
+``` r
 #Combining the data frames
 arrest_dates<-unique(arrests$date_value)
 charge_dates<-unique(charges$date_value)
@@ -110,8 +103,16 @@ comb<-arrests[,c("date_value", "arrests_violent", "arrests_property","arrests_dr
 #        by="date_value")
 ```
 
-3. Filter to include only dates prior to 2017-06-29 and after 2018-01-01. Filter out dates after 2020-03-15 (to exclude judicial actions after the COVID-19 pandemic began effecting the Philadelphia courts). Create a binary treatment variable, assigning it to be fALSE for dates prior to when Krasner took office and TRUE for dates after.
-```{r}
+3.  Filter to include only dates prior to 2017-06-29 and after
+    2018-01-01. Filter out dates after 2020-03-15 (to exclude judicial
+    actions after the COVID-19 pandemic began effecting the Philadelphia
+    courts). Create a binary treatment variable, assigning it to be
+    fALSE for dates prior to when Krasner took office and TRUE for dates
+    after.
+
+<!-- end list -->
+
+``` r
 comb_full<-comb
 comb<-filter(comb, date_value <= "2017-06-28" | date_value>="2018-01-01")
 comb<-filter(comb, date_value<"2020-03-15")
@@ -127,12 +128,13 @@ charges_all<-comb
 charges_all_full<-comb_full
 ```
 
+4.  Reshape into a long data frame with columns date\_value, type
+    (arrest or chage), group (violent, property, drugs, firearms, other,
+    or uncategorized) and the counts for each combination of the these.
 
+<!-- end list -->
 
-
-4. Reshape into a long data frame with columns date_value, type (arrest or chage), group (violent, property, drugs, firearms, other, or uncategorized) and the counts for each combination of the these.
-```{r long}
-
+``` r
 #arrest_groups<-colnames(charges_all)[2:7]
 #charges_groups<-colnames(charges_all)[8:13]
 #incidents_groups<-colnames(charges_all)[14:18]
@@ -171,25 +173,4 @@ write.csv(data_long, "charges_all_long.csv")
 
 data_long_full<-select(data_long_full, "date_value", "type", "group", "value")
 write.csv(data_long_full, "charges_all_long_full.csv")
-
-
-
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
