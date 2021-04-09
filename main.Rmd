@@ -1,10 +1,8 @@
 ---
-title: Estimating the causal effects of Krasner's tenure as District Attorney on criminal charges and other outcomes
+title: Estimating the causal effects of Krasner's tenure as District Attorney on criminal charges
 author: "Vitaly Lorman"
 date: "3/25/2021"
-output:
-  html_document: default
-  pdf_document: default
+output: rmarkdown::github_document
 bibliography: DAbib.bib
 ---
 
