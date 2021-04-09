@@ -10,7 +10,7 @@ of treatment (being charged by Krasner's DAO as compared to being charged by his
 significant decrease in charges in five of six categories of offenses, and an increase in charges for firearms offenses. We also investigate the sensitivity
 of our estimates to unobserved confounders.
 
-* In [matching.md](matching.md) we document more about our matching methodology and investigate other matching methods.
+* [matching.md](matching.md) contains further details about our matching methodology and investigates other matching methods.
 
 * [cleaning.md](cleaning.md) documents how we obtained and processed our data to prepare it for analysis.
 
