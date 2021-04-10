@@ -116,7 +116,7 @@ charges_all<-comb
 charges_all_full<-comb_full
 ```
 
-## 4\. Reshape the data
+### 4\. Reshape the data
 
 We reshape into a long data frame with columns date\_value, type (arrest
 or chage), group (violent, property, drugs, firearms, other, or

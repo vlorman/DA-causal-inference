@@ -65,6 +65,7 @@ plot(m_nearest,  type = "jitter", interactive = FALSE)
 plot(m_nearest,  type = "hist")
 plot(m_nearest, type="qq")
 ```
+
 The first plot, a Love plot, compares the absolute standized mean differences for each covariate between matched data and all data. The rightmost solid vertical bar shows a margin of 0.1 standardized mean difference units of zero. We see that, despite a reduction in standardize mean differences for each covariate, the absolute standardized mean differences for each covariate except drug arrest counts do not fall within this margin. The histogram and QQ plots also that we might hope for further improvement in balance.
 
 Next, we attempt to take advantage of the fact that we have more control than treatment units by implementing nearest neighbor matching allowing more than one control to be matched to each treatment unit. We use variable ratio matching and force each unit to be matched.

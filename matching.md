@@ -140,6 +140,7 @@ plot(m_nearest, type="qq")
 ```
 
 ![](matching_files/figure-gfm/plot%201nearest%20neighbors-4.png)<!-- -->![](matching_files/figure-gfm/plot%201nearest%20neighbors-5.png)<!-- -->
+
 The first plot, a Love plot, compares the absolute standized mean
 differences for each covariate between matched data and all data. The
 rightmost solid vertical bar shows a margin of 0.1 standardized mean

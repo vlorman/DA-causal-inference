@@ -117,7 +117,7 @@ charges_all_full<-comb_full
 
 
 
-## 4. Reshape the data
+### 4. Reshape the data
 
 We reshape into a long data frame with columns date_value, type (arrest or chage), group (violent, property, drugs, firearms, other, or uncategorized) and the counts for each combination of the these.
 ```{r long}

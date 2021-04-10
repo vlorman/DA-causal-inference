@@ -1,7 +1,7 @@
 ---
 title: Estimating the effect of Krasner's tenure as District Attorney on criminal charges
 author: "Vitaly Lorman"
-date: "3/25/2021"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   github_document:
   number_sections: true
@@ -295,18 +295,20 @@ effect_sum<-cbind(effect_sum,
                   100*effect_sum[,c("treatment","confmin", "confmax")]/
                     filter(means, type=="charge")[c(6, 4, 1, 2, 3, 5),"control"])
 colnames(effect_sum)[5:7]<-c("perc_treatment", "perc_confmin", "perc_confmax")
-effect_table<-effect_sum[,c(1, 2, 5)]
-effect_table[,2:3]<-round(effect_table[,2:3],2)
-colnames(effect_table)<-c("Charge type", "Diff in means", "Perc diff in means")
-effect_table[,"Diff in means 95% confint"]<-
-  paste("(", round(effect_sum$confmin,2), ",",
+effect_table<-as.data.frame(effect_sum[,1])
+#effect_table[,2:3]<-round(effect_table[,2:3],2)
+colnames(effect_table)<-c("Charge type")
+effect_table[,"Estimated difference"]<-
+  paste(round(effect_sum[,2],2), ", (", 
+        round(effect_sum$confmin,2), ",",
         round(effect_sum$confmax,2), ")")
-effect_table[,"Perc diff in means 95% confint"]<-
-  paste("(", round(effect_sum$perc_confmin,2), ",",
+effect_table[,"Estimated % difference"]<-
+  paste(round(effect_sum[,5],2), ", (", 
+        round(effect_sum$perc_confmin,2), ",",
         round(effect_sum$perc_confmax,2), ")")
 effect_table
 
-kable(effect_table, caption="Effect estimates and confidence intervals")
+kable(effect_table, caption="Effect estimates and 95% confidence intervals")
 ```
 
 

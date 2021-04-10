@@ -2,7 +2,7 @@ Estimating the effect of Krasner’s tenure as District Attorney on
 criminal charges
 ================
 Vitaly Lorman
-3/25/2021
+10 April, 2021
 
 ## Introduction
 
@@ -746,47 +746,42 @@ effect_sum<-cbind(effect_sum,
                   100*effect_sum[,c("treatment","confmin", "confmax")]/
                     filter(means, type=="charge")[c(6, 4, 1, 2, 3, 5),"control"])
 colnames(effect_sum)[5:7]<-c("perc_treatment", "perc_confmin", "perc_confmax")
-effect_table<-effect_sum[,c(1, 2, 5)]
-effect_table[,2:3]<-round(effect_table[,2:3],2)
-colnames(effect_table)<-c("Charge type", "Diff in means", "Perc diff in means")
-effect_table[,"Diff in means 95% confint"]<-
-  paste("(", round(effect_sum$confmin,2), ",",
+effect_table<-as.data.frame(effect_sum[,1])
+#effect_table[,2:3]<-round(effect_table[,2:3],2)
+colnames(effect_table)<-c("Charge type")
+effect_table[,"Estimated difference"]<-
+  paste(round(effect_sum[,2],2), ", (", 
+        round(effect_sum$confmin,2), ",",
         round(effect_sum$confmax,2), ")")
-effect_table[,"Perc diff in means 95% confint"]<-
-  paste("(", round(effect_sum$perc_confmin,2), ",",
+effect_table[,"Estimated % difference"]<-
+  paste(round(effect_sum[,5],2), ", (", 
+        round(effect_sum$perc_confmin,2), ",",
         round(effect_sum$perc_confmax,2), ")")
 effect_table
 ```
 
-    ##     Charge type treatment Perc diff in means Diff in means 95% confint
-    ## 1       violent     -1.64              -5.93         ( -2.39 , -0.88 )
-    ## 2      property     -2.96             -15.55         ( -3.73 , -2.19 )
-    ## 3         drugs     -3.47              -8.34         ( -4.63 , -2.32 )
-    ## 4      firearms      0.25               8.00           ( 0.07 , 0.43 )
-    ## 5         other     -1.42             -34.83         ( -1.63 , -1.21 )
-    ## 6 uncategorized     -2.32             -18.49         ( -2.78 , -1.85 )
-    ##   Perc diff in means 95% confint
-    ## 1               ( -8.67 , -3.2 )
-    ## 2             ( -19.59 , -11.5 )
-    ## 3             ( -11.12 , -5.57 )
-    ## 4               ( 2.34 , 13.65 )
-    ## 5            ( -40.04 , -29.62 )
-    ## 6            ( -22.17 , -14.81 )
+    ##     Charge type      Estimated difference       Estimated % difference
+    ## 1       violent -1.64 , ( -2.39 , -0.88 )     -5.93 , ( -8.67 , -3.2 )
+    ## 2      property -2.96 , ( -3.73 , -2.19 )  -15.55 , ( -19.59 , -11.5 )
+    ## 3         drugs -3.47 , ( -4.63 , -2.32 )   -8.34 , ( -11.12 , -5.57 )
+    ## 4      firearms    0.25 , ( 0.07 , 0.43 )         8 , ( 2.34 , 13.65 )
+    ## 5         other -1.42 , ( -1.63 , -1.21 ) -34.83 , ( -40.04 , -29.62 )
+    ## 6 uncategorized -2.32 , ( -2.78 , -1.85 ) -18.49 , ( -22.17 , -14.81 )
 
 ``` r
-kable(effect_table, caption="Effect estimates and confidence intervals")
+kable(effect_table, caption="Effect estimates and 95% confidence intervals")
 ```
 
-| Charge type   | Diff in means | Perc diff in means | Diff in means 95% confint | Perc diff in means 95% confint |
-| :------------ | ------------: | -----------------: | :------------------------ | :----------------------------- |
-| violent       |        \-1.64 |             \-5.93 | ( -2.39 , -0.88 )         | ( -8.67 , -3.2 )               |
-| property      |        \-2.96 |            \-15.55 | ( -3.73 , -2.19 )         | ( -19.59 , -11.5 )             |
-| drugs         |        \-3.47 |             \-8.34 | ( -4.63 , -2.32 )         | ( -11.12 , -5.57 )             |
-| firearms      |          0.25 |               8.00 | ( 0.07 , 0.43 )           | ( 2.34 , 13.65 )               |
-| other         |        \-1.42 |            \-34.83 | ( -1.63 , -1.21 )         | ( -40.04 , -29.62 )            |
-| uncategorized |        \-2.32 |            \-18.49 | ( -2.78 , -1.85 )         | ( -22.17 , -14.81 )            |
+| Charge type   | Estimated difference       | Estimated % difference        |
+| :------------ | :------------------------- | :---------------------------- |
+| violent       | \-1.64 , ( -2.39 , -0.88 ) | \-5.93 , ( -8.67 , -3.2 )     |
+| property      | \-2.96 , ( -3.73 , -2.19 ) | \-15.55 , ( -19.59 , -11.5 )  |
+| drugs         | \-3.47 , ( -4.63 , -2.32 ) | \-8.34 , ( -11.12 , -5.57 )   |
+| firearms      | 0.25 , ( 0.07 , 0.43 )     | 8 , ( 2.34 , 13.65 )          |
+| other         | \-1.42 , ( -1.63 , -1.21 ) | \-34.83 , ( -40.04 , -29.62 ) |
+| uncategorized | \-2.32 , ( -2.78 , -1.85 ) | \-18.49 , ( -22.17 , -14.81 ) |
 
-Effect estimates and confidence intervals
+Effect estimates and 95% confidence intervals
 
 The plot below shows our estimated effects (as percent differences in
 means) together with 95% confidence intervals. The blue dots denote the
