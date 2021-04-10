@@ -12,7 +12,7 @@ bibliography: DAbib.bib
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, include=FALSE}
 library(tidyverse)
 library(knitr)
 library(lubridate)
@@ -20,126 +20,153 @@ library(scales)
 library(reshape2)
 library(MatchIt)
 library(optmatch)
-#library(Zelig)
 ```
 
-In this document, we keep track of our various attempts at matching and analysis of balance.
+## Introduction
+
+This document is a supplement to the analysis and write-up in [main.md](main.md), which estimates the effects of Larry Krasner's tenure as Philadelphia District Attorney on criminal charges. We recommend reading that document first for the background and context for the methodology further described here, in particular the structure of our study and definitions of treatment, outcomes, and covariates.
+
+The purpose of this file is to document the propensity score matching methods and measures of balance we examined and our decision making process in settling on variable-ratio nearest neighbor matching with calipers outlined employed in our final analysis. Our matching methods are all carried out using the 'matchit' package of Ho, Imai, King, and Stuart.
+
+
+We begin by reading in the data (data acquisition and preprocessing is documented in [cleaning.md](cleaning.md))
 
 ```{r read data}
 charges_all<-read.csv("charges_all.csv", row.names=1)
 charges_all_long<-read.csv("charges_all_long.csv", row.names=1)
 charges_all$date_value<-as.Date(charges_all$date_value)
 charges_all_long$date_value<-as.Date(charges_all_long$date_value)
+
+n_treatment<-sum(charges_all$treatment)
+n_control<-nrow(charges_all)-n_treatment
 ```
 
 
 ### Nearest neighbor matching
+
+We began by looking at nearest neighbor matching, first looking for exact matches on propensity scores. This did not yield any matches, which makes sense since it is highly unlike for two days in our time frame to have exactly equal numbers of arrests in each of the six offense categories. 
+
+Next, we try 1-nearest neighbor matching.
+
+
 ```{r match 1nearest neighbors}
 ##default
-m_nearest.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest")
-s_nearest.out <- summary(m_nearest.out, standardize = TRUE)
-s_nearest.out
-#plot(s_nearest.out)
-
-#plot(m_nearest.out,  type = "jitter", interactive = FALSE)
-#plot(m_nearest.out,  type = "hist")
-#plot(m_nearest.out, type="qq")
-
+m_nearest<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest")
+s_nearest <- summary(m_nearest, standardize = TRUE)
+s_nearest
 ```
 
+Looking at standardized mean differences, we see improvement in balance for each covariate comparing the matched data to all data. Nearest neighbor matching keeps all 804 of our treated units, and matches each with a single control unit. This results in leaving 471 control units unmatched. Next, we look at some plots to further assess the balance of this method.
+
+
+```{r plot 1nearest neighbors}
+plot(s_nearest)
+plot(m_nearest,  type = "jitter", interactive = FALSE)
+plot(m_nearest,  type = "hist")
+plot(m_nearest, type="qq")
+```
+The first plot, a Love plot, compares the absolute standized mean differences for each covariate between matched data and all data. The rightmost solid vertical bar shows a margin of 0.1 standardized mean difference units of zero. We see that, despite a reduction in standardize mean differences for each covariate, the absolute standardized mean differences for each covariate except drug arrest counts do not fall within this margin. The histogram and QQ plots also that we might hope for further improvement in balance.
+
+Next, we attempt to take advantage of the fact that we have more control than treatment units by implementing nearest neighbor matching allowing more than one control to be matched to each treatment unit. We use variable ratio matching and force each unit to be matched.
 
 ```{r match knearest}
-m_knearest.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", min.controls=1, max.controls=3, ratio=1275/653)
-s_knearest.out <- summary(m_knearest.out, standardize = TRUE)
+m_knearest<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", min.controls=1, max.controls=3, ratio=n_control/n_treatment)
+s_knearest <- summary(m_knearest, standardize = TRUE)
   
-s_knearest.out <- summary(m_knearest.out, standardize = TRUE)
-s_knearest.out
-
-#plot(s_knearest.out)
-#plot(m_knearest.out,  type = "jitter", interactive = FALSE)
-#plot(m_knearest.out,  type = "hist")
-#plot(m_knearest.out, type="qq")
+s_knearest
 ```
 
-Does not seem to do better.
+We see that all control units have now been matched. We look at the same plots to see whether balance has improved.
+
+
+```{r plot knearest}
+
+plot(s_knearest)
+plot(m_knearest,  type = "jitter", interactive = FALSE)
+plot(m_knearest,  type = "hist")
+plot(m_knearest, type="qq")
+```
+
+We see that incorporating all of the control units actually seems to produce worse balance. Looking at the jitter plots, we see that the control group's propensity scores are much denser in the low end of the propensity score range. Conversely, the treatment group is dense in the high end of the propensity score range, and sparse in the low end. Forcing each control unit to have a match makes our balance worse, since the control units with low propensity scores do not have enough treatment units with similarly low propensity scores for each control unit to secure a good match.
+
+## Subclassification matching
+
+Next, we attempt to match by subclassification. This matching method creates subclasses (6 by default) such that treatment and control units in each subclass have similar distribution of covariates. To use the results of this in regression, we would weigh each unit inverse proportionately to the fraction of the population in the subclass. In subclassification matching, each unit is matched.
 
 ```{r matching subclass}
-m_subclass.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="subclass")
-s_subclass.out <- summary(m_subclass.out, standardize = TRUE)
-s_subclass.out
-#plot(s_subclass.out)
-
-#plot(m_subclass.out,  type = "jitter", interactive = FALSE)
-#plot(m_subclass.out,  type = "hist")
-#plot(m_subclass.out, type="qq")
+m_subclass<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="subclass")
+s_subclass <- summary(m_subclass, standardize = TRUE)
+s_subclass
 ```
 
-Subclass matching seems to do really well.
+We see large improvements in standardized mean differences. Let's examine some plots.
 
-```{r matching optimal}
-#m_optimal.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="optimal", ratio=1275/653)
-#s_optimal.out <- summary(m_optimal.out, standardize = TRUE)
-#s_optimal.out
-#plot(s_optimal.out)
-
-#plot(m_optimal.out,  type = "jitter", interactive = FALSE)
-#plot(m_optimal.out,  type = "hist")
-#plot(m_optimal.out, type="qq")
-
-
-```
-Nope skip this one!
-
-
-```{r matching cem}
-
-m_cem.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="cem")
-s_cem.out <- summary(m_cem.out, standardize = TRUE)
-s_cem.out
-#plot(s_cem.out)
-
-#plot(m_cem.out,  type = "jitter", interactive = FALSE)
-#plot(m_cem.out,  type = "hist")
-#plot(m_cem.out, type="qq")
-
-
-
-
+```{r plot subclass}
+plot(s_subclass)
+plot(m_subclass,  type = "jitter")
+plot(m_subclass,  type = "hist", interactive = FALSE, subclass=FALSE)
+plot(m_subclass, type="qq", interactive = FALSE, subclass=FALSE)
 ```
 
-CEM drops too many observations
+Subclass matching seems to do really well. The Love plot shows substantial improvements in balance.
 
-Try discarding everything outside the convex hull
+However, looking more closely at class membership, we see that some of our subclasses are very small.
+
+```{r examine subclasses}
+matched_subclass<-match.data(m_subclass)
+subclass_sum<-matched_subclass %>%
+  group_by(treatment, subclass) %>%
+  summarise(count=n())
+
+subclass_sum
+```
+
+We see that the 5th and 6th subclasses have only 44 and 19 control units, respectively, while the first subclass has 750! These control units, the few on the higher end of the propensity score range, will be weighed more heavily in a regression, and we are concerned about weighing a few units so heavily. 
+
+## Discarding some treatment units
+
+Instead, we try an alternate approach by allowing some treatment units to be excluded. While this may potentially introduce extrapolation bias into our estimates, in the Discussion section of [main.md](main.md) we argue that this concern does not apply to our situation (effectively because we assume each case is charged separately, and is independent of the volume or distribution of arrests for other cases on that day). 
+
+First, we return to nearest neighbor matching and try discarding all units outside the convex hull of both treatment and control groups.
+
 
 ```{r discard hull}
-m_hull.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", discard="both")
+m_hull<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", discard="both")
 
-s_hull.out <- summary(m_hull.out, standardize = TRUE)
-s_hull.out
-#plot(s_hull.out)
+s_hull <- summary(m_hull, standardize = TRUE)
+s_hull
+plot(s_hull)
 
 #plot(m_hull.out,  type = "jitter", interactive = FALSE)
 #plot(m_hull.out,  type = "hist")
 #plot(m_hull.out, type="qq")
 
-m_hull_subclass.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="subclass", discard="both")
-s_hull_subclass.out<-summary(m_hull_subclass.out, standardize=TRUE)
-s_hull_subclass.out
 
-#plot(s_hull_subclass.out)
-#plot(m_hull_subclass.out,  type = "jitter", interactive = FALSE)
-#plot(m_hull_subclass.out,  type = "hist")
-#plot(m_hull_subclass.out, type="qq")
 
 ```
 
-Try nearest neighbor with calipers (ok to drop some treatment units)
+We see that there are only a few units (10 in treatment, 8 in control) outside the convex hull, and thus not much data has been dropped, and balance has not improved as much as we would prefer. 
+
+We next try nearest neighbor matching with calipers. The calipers, measured in standard deviation units, require that each match occur between units whose covariates are within the caliper values of each other. 
+
+We carry this out for several different caliper values and look at the Love plots and summaries in each case.
+
 
 ```{r calipers}
-mcal1.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.01)
-scal1.out <- summary(mcal1.out, standardize = TRUE)
-scal1.out
-#plot(scal1.out)
+mcal1<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.5)
+scal1 <- summary(mcal1, standardize = TRUE)
+scal1
+plot(scal1)
+
+mcal2<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.1)
+scal2 <- summary(mcal2, standardize = TRUE)
+scal2
+plot(scal2)
+
+mcal3<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.05)
+scal3 <- summary(mcal3, standardize = TRUE)
+scal3
+plot(scal3)
 
 #plot(mcal1.out,  type = "jitter", interactive = FALSE)
 #plot(mcal1.out,  type = "hist")
@@ -148,44 +175,16 @@ scal1.out
 
 
 ```
-May still need to handle other manually.
+We see excellent balance for calipers of size 0.1 and 0.05 (each covariate has absolute standardize mean difference within 0.1 of zero, and most are within 0.05). The price we pay, in the case of calipers of size 0.1, is dropping 253 (about 31%) of our treatment units. We discuss this concern further in the Discussion section of our analysis. We experimented with other caliper values, and this one seemed to produce the best marginal improvement in balance for how many units we needed to discard.
 
-## Matching with subclasses
+Finally, we take a look at k-nearest neighbor matching with 0.1 calipers and variable ratios, allowing more of our control units (those that fall within the caliper margins) to get matched.
 
-The number of arrests for various offenses is the biggest potential confounder of charges. We account for this by matching. After experimenting with different methods of matching, we found the best balance using subclass matching while discarding a handful of observations (?) outside the common support of the propensity scores. This is justified because...
-
-```{r matching}
-m.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_firearms++arrests_other+arrests_uncategorized, data=charges_all, method="subclass", discard="both")
-
-s.out <- summary(m.out, standardize = TRUE)
-s.out
-
-#plot(s.out)
-#plot(m.out,  type = "jitter", interactive = FALSE)
-#plot(m.out,  type = "hist")
-#plot(m.out, type="qq", interactive=FALSE, subclass=1:6)
-
-matched_data<-match.data(m.out)
-#summarise(group_by(matched_data, subclass, treatment), count=n())
-
+```{r calipers k nearest}
+mcal4.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.1, ratio=n_control/n_treatment, min.controls=1, max.controls=3)
+scal4.out <- summary(mcal4.out, standardize = TRUE)
+scal4.out
+plot(scal4.out)
 ```
 
-Let's look at the distributions of arrests in the different classes:
-```{r}
-matched_long<-melt(matched_data, id=c("date_value", "subclass", "treatment", "weights", "distance"))
-
-subclass_sum<-matched_long %>%
-  group_by(subclass, variable, treatment) %>%
-  summarise(mean=mean(value))
-
-subclass_arrest_sum<-subclass_sum[grep("^arrests", subclass_sum$variable),]
-
-ggplot(data=subclass_arrest_sum, aes(x=variable, y=mean, fill=treatment))+
-  geom_bar(position="dodge", stat="identity")+
-  facet_wrap(~subclass)+
-  theme(axis.text.x = element_text(angle = 90))
-
-
-```
-
+We see more control units find matches without a substantial decrease in balance. This is the version of matching we use in our final analysis.
 

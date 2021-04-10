@@ -41,11 +41,11 @@ Crime Reporting (UCR) Program and by police arrests reported by the DA’s
 office, has varied substantially. Since the DA’s office typically only
 enters the criminal justice process after an arrest has been made, we
 control for arrest counts by date across a variety of offense
-categories. We argue that the most substantial potential covariates that
+categories. We argue that the most substantial potential variables that
 effect charge counts do so only through their effect on the number of
 arrests across various categories and that consequently, by controlling
 for arrests, we produce estimates of the effect of Krasner’s tenure as
-DA on the number of charges brough for various offense types.
+DA on the number of charges brought for various offense types.
 
 Since the arrest counts vary between our control group (offenses charged
 by DA Williams) and treatment group (offenses charged by DA Krasner), we
@@ -127,9 +127,9 @@ Our cleaning and preprocessing (described further in the cleaning.rmd
 file) included the following steps:
 
   - Group offenses for charges and arrests into 6 groups (described
-    further below): violent, property, drugs, firearms, other, and
-    uncategorized by date. Calculate daily charge and arrest total in
-    each of these categories.
+    above): violent, property, drugs, firearms, other, and uncategorized
+    by date. Calculate daily charge and arrest total in each of these
+    categories.
   - Subset the charge and arrest data frames on common values of
     date\_value and merge them by date\_value, keeping just the totals
     for each of the 6 categories.
@@ -186,9 +186,9 @@ As discussed above, we group offenses into six groups (violent,
 property, drugs, firearms, other, and uncategorized). Our outcomes of
 interest are, for each offense type, the number of cases in which a
 charge of that type was brought as the most serious charge in that case.
-We measure outcomes as a difference in daily means between treatment and
-control group as well as a percent change relative to the control group
-daily mean.
+We define treatment effects as a difference in daily means between
+treatment and control group as well as a percent change relative to the
+control group daily mean.
 
 ## Covariates
 
@@ -335,12 +335,12 @@ kable(charge_diffs, caption="Differences in daily means of charge counts")
 
 | group         | diff\_in\_means | percent\_diff\_in\_means |
 | :------------ | --------------: | -----------------------: |
-| drugs         |      \-5.203693 |               \-12.50911 |
+| drugs         |      \-5.202450 |               \-12.50612 |
 | firearms      |        0.746456 |                 23.93089 |
 | other         |      \-2.259318 |               \-55.52488 |
-| property      |      \-6.717053 |               \-35.25250 |
-| uncategorized |      \-1.782953 |               \-14.23460 |
-| violent       |      \-3.501361 |               \-12.68970 |
+| property      |      \-6.715809 |               \-35.24597 |
+| uncategorized |      \-1.781709 |               \-14.22467 |
+| violent       |      \-3.500117 |               \-12.68519 |
 
 Differences in daily means of charge counts
 
@@ -377,7 +377,7 @@ control groups. For instance, our scatteplots above show lower daily
 arrest counts for several offense types prior to 2018. Thus, before
 fitting our linear models, in this section we employ matching to account
 for imbalance of covariates in our treatment and control groups
-following (Daniel E. Ho and Stuart 2007). First, here is a plot of the
+following (Daniel E. Ho and Stuart 2007). First, we plot the
 distributions of mean arrest counts by type, along with a QQ plot for
 each plot:
 
@@ -419,8 +419,8 @@ for (g in unique(charges_all_long$group))
 We see imbalance for some of the arrest types, particularly property,
 drugs, and other.
 
-To address this imbalance, we implementing matching on propensity
-scores. Following Daniel E. Ho and Stuart (2007) and appealing to the
+To address this imbalance, we implement matching on propensity scores.
+Following Daniel E. Ho and Stuart (2007) and appealing to the
 “propensity score tautology”, our sole concern is achieving balance on
 the covariates, and so whatever matching method we implement that yields
 our desired level of balance will do the job. We experimented with a
@@ -454,11 +454,12 @@ plot(scal1.out)
 
 ![](main_files/figure-gfm/calipers-1.png)<!-- -->
 
-The Love plot above shows the standardized mean difference measure of
-balance for each covariate. The vertical dashed lines are drawn within
-.1 standardized mean difference units of zero, and we see that for each
-covariate, the standardized mean differences between treatment and
-control covariates all fall within this margin of
+The Love plot above compares the standardized mean difference measure of
+balance for each covariate in the matched data to all data. The vertical
+dashed lines are drawn within .1 standardized mean difference units of
+zero, and we see that for each covariate, the standardized mean
+differences between treatment and control covariates all fall within
+this margin of
 zero.
 
 ``` r
@@ -518,24 +519,24 @@ summary(lm_violent)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -39.165  -4.617  -0.549   4.075  67.559 
+    ## -39.161  -4.617  -0.551   4.076  67.559 
     ## 
     ## Coefficients:
     ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            9.59362    0.85559  11.213  < 2e-16 ***
-    ## treatment             -1.63853    0.38494  -4.257 2.21e-05 ***
-    ## arrests_violent        0.53249    0.02490  21.384  < 2e-16 ***
-    ## arrests_property       0.04125    0.03019   1.366  0.17204    
-    ## arrests_drugs          0.02994    0.01287   2.326  0.02013 *  
-    ## arrests_firearms      -0.09221    0.08413  -1.096  0.27326    
-    ## arrests_other          0.16001    0.05885   2.719  0.00663 ** 
-    ## arrests_uncategorized  0.06408    0.02862   2.239  0.02531 *  
+    ## (Intercept)            9.59352    0.85554  11.213  < 2e-16 ***
+    ## treatment             -1.63691    0.38492  -4.253 2.25e-05 ***
+    ## arrests_violent        0.53245    0.02490  21.384  < 2e-16 ***
+    ## arrests_property       0.04131    0.03019   1.368  0.17148    
+    ## arrests_drugs          0.02985    0.01287   2.320  0.02049 *  
+    ## arrests_firearms      -0.09193    0.08413  -1.093  0.27469    
+    ## arrests_other          0.15997    0.05885   2.718  0.00664 ** 
+    ## arrests_uncategorized  0.06421    0.02862   2.243  0.02502 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 6.996 on 1463 degrees of freedom
     ## Multiple R-squared:  0.3186, Adjusted R-squared:  0.3153 
-    ## F-statistic: 97.72 on 7 and 1463 DF,  p-value: < 2.2e-16
+    ## F-statistic: 97.71 on 7 and 1463 DF,  p-value: < 2.2e-16
 
 ``` r
 lm_property<-lm(charges_property~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data2)
@@ -552,24 +553,24 @@ summary(lm_property)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -24.592  -3.595  -0.865   2.495 128.375 
+    ## -24.595  -3.596  -0.860   2.493 128.374 
     ## 
     ## Coefficients:
     ##                        Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            7.404964   0.873176   8.480  < 2e-16 ***
-    ## treatment             -2.964401   0.392853  -7.546 7.86e-14 ***
-    ## arrests_violent        0.028109   0.025413   1.106 0.268875    
-    ## arrests_property       0.511002   0.030813  16.584  < 2e-16 ***
-    ## arrests_drugs          0.008959   0.013132   0.682 0.495209    
-    ## arrests_firearms       0.084886   0.085863   0.989 0.323009    
-    ## arrests_other          0.206995   0.060064   3.446 0.000585 ***
-    ## arrests_uncategorized  0.007616   0.029211   0.261 0.794347    
+    ## (Intercept)            7.406485   0.873164   8.482  < 2e-16 ***
+    ## treatment             -2.962303   0.392848  -7.541 8.17e-14 ***
+    ## arrests_violent        0.028006   0.025413   1.102 0.270616    
+    ## arrests_property       0.511128   0.030813  16.588  < 2e-16 ***
+    ## arrests_drugs          0.008982   0.013132   0.684 0.494073    
+    ## arrests_firearms       0.085210   0.085862   0.992 0.321166    
+    ## arrests_other          0.207150   0.060063   3.449 0.000579 ***
+    ## arrests_uncategorized  0.007472   0.029210   0.256 0.798141    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 7.14 on 1463 degrees of freedom
     ## Multiple R-squared:  0.2496, Adjusted R-squared:  0.246 
-    ## F-statistic: 69.51 on 7 and 1463 DF,  p-value: < 2.2e-16
+    ## F-statistic: 69.52 on 7 and 1463 DF,  p-value: < 2.2e-16
 
 ``` r
 lm_drugs<-lm(charges_drugs~treatment+arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_other+arrests_uncategorized, data=matched_data2)
@@ -688,22 +689,22 @@ summary(lm_uncategorized)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -12.3517  -2.7661  -0.1735   2.4598  25.2811 
+    ## -12.3518  -2.7681  -0.1724   2.4585  25.2827 
     ## 
     ## Coefficients:
     ##                        Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            3.918599   0.522517   7.499 1.11e-13 ***
-    ## treatment             -2.317618   0.235087  -9.859  < 2e-16 ***
-    ## arrests_violent        0.009724   0.015207   0.639   0.5226    
-    ## arrests_property      -0.033801   0.018439  -1.833   0.0670 .  
-    ## arrests_drugs          0.015449   0.007858   1.966   0.0495 *  
-    ## arrests_firearms       0.106041   0.051381   2.064   0.0392 *  
-    ## arrests_other         -0.020480   0.035943  -0.570   0.5689    
-    ## arrests_uncategorized  0.322270   0.017480  18.437  < 2e-16 ***
+    ## (Intercept)            3.918500   0.522501   7.500 1.11e-13 ***
+    ## treatment             -2.315998   0.235080  -9.852  < 2e-16 ***
+    ## arrests_violent        0.009684   0.015207   0.637   0.5244    
+    ## arrests_property      -0.033749   0.018438  -1.830   0.0674 .  
+    ## arrests_drugs          0.015361   0.007858   1.955   0.0508 .  
+    ## arrests_firearms       0.106323   0.051380   2.069   0.0387 *  
+    ## arrests_other         -0.020520   0.035942  -0.571   0.5681    
+    ## arrests_uncategorized  0.322395   0.017479  18.444  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 4.273 on 1463 degrees of freedom
+    ## Residual standard error: 4.272 on 1463 degrees of freedom
     ## Multiple R-squared:  0.2874, Adjusted R-squared:  0.284 
     ## F-statistic: 84.28 on 7 and 1463 DF,  p-value: < 2.2e-16
 
@@ -717,7 +718,7 @@ mean.
 ``` r
 charge_type<-c("violent", "property", "drugs", "firearms", "other", "uncategorized")
 effect_sum<-as.data.frame(charge_type)
-effect_sum[,"treatment_effect"]<-
+effect_sum[,"treatment"]<-
   rbind(lm_violent$coefficients["treatment"],
     lm_property$coefficients["treatment"],
     lm_drugs$coefficients["treatment"],
@@ -735,31 +736,72 @@ effect_sum<-cbind(effect_sum,
 
 colnames(effect_sum)[3:4]<-c("confmin", "confmax")
 
-effect_sum<-cbind(effect_sum,
-                  100*effect_sum[,c("treatment_effect","confmin", "confmax")]/
-                    filter(means, type=="charge")[c(6, 4, 1, 2, 3, 5),"control"])
+#effect_sum[,c("treatment", "confmin", "confmax")]<-
+#  round(effect_sum[,c("treatment", "confmin", "confmax")],2)
 
-colnames(effect_sum)[5:7]<-c("percent_treatment_effect", "percent_confmin", "percent_confmax")  
-kable(effect_sum, caption="Effect estimates and confidence intervals")
+
+#effect_sum[,"95% confint"]<-paste("(", effect_sum$confmin, ",", effect_sum$confmax, ")")
+
+effect_sum<-cbind(effect_sum,
+                  100*effect_sum[,c("treatment","confmin", "confmax")]/
+                    filter(means, type=="charge")[c(6, 4, 1, 2, 3, 5),"control"])
+colnames(effect_sum)[5:7]<-c("perc_treatment", "perc_confmin", "perc_confmax")
+effect_table<-effect_sum[,c(1, 2, 5)]
+effect_table[,2:3]<-round(effect_table[,2:3],2)
+colnames(effect_table)<-c("Charge type", "Diff in means", "Perc diff in means")
+effect_table[,"Diff in means 95% confint"]<-
+  paste("(", round(effect_sum$confmin,2), ",",
+        round(effect_sum$confmax,2), ")")
+effect_table[,"Perc diff in means 95% confint"]<-
+  paste("(", round(effect_sum$perc_confmin,2), ",",
+        round(effect_sum$perc_confmax,2), ")")
+effect_table
 ```
 
-| charge\_type  | treatment\_effect |     confmin |     confmax | percent\_treatment\_effect | percent\_confmin | percent\_confmax |
-| :------------ | ----------------: | ----------: | ----------: | -------------------------: | ---------------: | ---------------: |
-| violent       |       \-1.6385268 | \-2.3936210 | \-0.8834327 |                 \-5.938379 |       \-8.675005 |       \-3.201753 |
-| property      |       \-2.9644006 | \-3.7350160 | \-2.1937852 |                \-15.557795 |      \-19.602146 |      \-11.513444 |
-| drugs         |       \-3.4713957 | \-4.6264089 | \-2.3163826 |                 \-8.344859 |      \-11.121385 |       \-5.568332 |
-| firearms      |         0.2494747 |   0.0731227 |   0.4258266 |                   7.997993 |         2.344266 |        13.651720 |
-| other         |       \-1.4172731 | \-1.6292002 | \-1.2053459 |                \-34.830825 |      \-40.039135 |      \-29.622515 |
-| uncategorized |       \-2.3176179 | \-2.7787613 | \-1.8564745 |                \-18.503211 |      \-22.184850 |      \-14.821571 |
+    ##     Charge type treatment Perc diff in means Diff in means 95% confint
+    ## 1       violent     -1.64              -5.93         ( -2.39 , -0.88 )
+    ## 2      property     -2.96             -15.55         ( -3.73 , -2.19 )
+    ## 3         drugs     -3.47              -8.34         ( -4.63 , -2.32 )
+    ## 4      firearms      0.25               8.00           ( 0.07 , 0.43 )
+    ## 5         other     -1.42             -34.83         ( -1.63 , -1.21 )
+    ## 6 uncategorized     -2.32             -18.49         ( -2.78 , -1.85 )
+    ##   Perc diff in means 95% confint
+    ## 1               ( -8.67 , -3.2 )
+    ## 2             ( -19.59 , -11.5 )
+    ## 3             ( -11.12 , -5.57 )
+    ## 4               ( 2.34 , 13.65 )
+    ## 5            ( -40.04 , -29.62 )
+    ## 6            ( -22.17 , -14.81 )
+
+``` r
+kable(effect_table, caption="Effect estimates and confidence intervals")
+```
+
+| Charge type   | Diff in means | Perc diff in means | Diff in means 95% confint | Perc diff in means 95% confint |
+| :------------ | ------------: | -----------------: | :------------------------ | :----------------------------- |
+| violent       |        \-1.64 |             \-5.93 | ( -2.39 , -0.88 )         | ( -8.67 , -3.2 )               |
+| property      |        \-2.96 |            \-15.55 | ( -3.73 , -2.19 )         | ( -19.59 , -11.5 )             |
+| drugs         |        \-3.47 |             \-8.34 | ( -4.63 , -2.32 )         | ( -11.12 , -5.57 )             |
+| firearms      |          0.25 |               8.00 | ( 0.07 , 0.43 )           | ( 2.34 , 13.65 )               |
+| other         |        \-1.42 |            \-34.83 | ( -1.63 , -1.21 )         | ( -40.04 , -29.62 )            |
+| uncategorized |        \-2.32 |            \-18.49 | ( -2.78 , -1.85 )         | ( -22.17 , -14.81 )            |
 
 Effect estimates and confidence intervals
 
+The plot below shows our estimated effects (as percent differences in
+means) together with 95% confidence intervals. The blue dots denote the
+raw differences in means between the treatment and control groups for
+comparison.
+
 ``` r
 effect_plot<-ggplot()+
-  geom_errorbar(data=effect_sum, mapping=aes(x=charge_type, ymin=percent_confmin, ymax=percent_confmax))+
-  geom_point(data=effect_sum, aes(x=charge_type, y=percent_treatment_effect))+
+  geom_errorbar(data=effect_sum, mapping=aes(x=charge_type, ymin=perc_confmin, ymax=perc_confmax))+
+  geom_point(data=effect_sum, aes(x=charge_type, y=perc_treatment))+
   scale_y_continuous(breaks=seq(-60,40,10))+
-  geom_point(data=charge_diffs, aes(x=group, y=percent_diff_in_means), color="blue")
+  geom_point(data=charge_diffs, aes(x=group, y=percent_diff_in_means), color="blue")+
+  geom_hline(yintercept=0, color="red")+
+  xlab("Offense type")+
+  ylab("Percent difference in daily means")
 
 effect_plot
 ```
@@ -770,7 +812,7 @@ In summary, our mean effect estimates are as follows:
 
   - ***Violent offenses:*** a `5.9`% decrease in charges.
 
-  - ***Property offenses:*** a 15.6% decrease in charges.
+  - ***Property offenses:*** a 15.5% decrease in charges.
 
   - ***Drug offenses:*** a 8.3% decrease in charges.
 
@@ -784,15 +826,15 @@ In all six categories, we have statistically significant evidence of a
 nonzero treatment effect (a decrease in all categories except firearms
 offenses).
 
-Comparing to the point estimates of differences in means (prior to
-controlling for arrest counts), we observe that none of these estimates
-fall within our 95% confidence intervals. For violent, property, drug,
-and other offenses, we find that our estimated effect is a smaller
-decrease than the percent change in means. In the case of uncategorized
-offenses, our estimated effect is a larger decrease than the difference
-in means. Finally, in the case of firearm offenses, the effect we
-estimate is that of a substantially smaller increase (about 8%) than the
-simple difference in means (about 24%).
+Comparing to the raw differences in means (prior to controlling for
+arrest counts), we observe that none of these estimates fall within our
+95% confidence intervals. For violent, property, drug, and other
+offenses, we find that our estimated effect is a smaller decrease than
+the percent change in means. In the case of uncategorized offenses, our
+estimated effect is a larger decrease than the difference in means.
+Finally, in the case of firearm offenses, the effect we estimate is that
+of a substantially smaller increase (about 8%) than the simple
+difference in means (about 24%).
 
 ## Discussion
 
@@ -811,13 +853,14 @@ through some sensitivity analyses.
 
 We recall that our estimates are not the entirety of Krasner’s DAO’s
 effect on charges. For instance, a decision early in Krasner’s tenure to
-drop all marijuana possession charges may well have had an effect on PPD
-policy on whether to make arrests in cases of marijuana possession.
-Thus, by its effect on arrests, Krasner’s DAO may have had an additional
-effect on the reduction in charges for drug offenses. However, any such
-effect is not included in our estimate–the above estimates only apply to
-what effect Krasner’s office had in charging the arrests they were given
-as compared to Williams’ DAO.
+drop all marijuana possession charges may have had an effect on
+Philadelphia Police Department policy on whether to make arrests in
+cases of marijuana possession. Thus, by its effect on arrests, Krasner’s
+DAO may have had an additional effect on the reduction in charges for
+drug offenses. However, any such effect is not included in our
+estimate–the above estimates only apply to what effect Krasner’s
+office had in charging the arrests they were given as compared to
+Williams’ DAO.
 
 Our assumption that there was only one form of the treatment is almost
 certainly not entirely accurate: changes to charging policy through
@@ -864,18 +907,18 @@ effect_sum<-cbind(effect_sum,
     confint(lm_other_res.out)["treatment",],
     confint(lm_uncategorized_res.out)["treatment",]))
 
-colnames(effect_sum)[9:10]<-c("confmin_res", "confmax_res")
+colnames(effect_sum)[8:10]<-c("treatment_res","confmin_res", "confmax_res")
 
-select(effect_sum, "treatment_effect", "confmin", "confmax", "treatment_effect_res", "confmin_res", "confmax_res")
+select(effect_sum, "treatment", "confmin", "confmax", "treatment_res", "confmin_res", "confmax_res")
 ```
 
     ##    treatment     confmin    confmax  treatment confmin_res confmax_res
-    ## 1 -1.6385268 -2.39362098 -0.8834327 -1.3758254  -2.1501750  -0.6014759
-    ## 2 -2.9644006 -3.73501604 -2.1937852 -3.4197764  -4.1873332  -2.6522197
+    ## 1 -1.6369071 -2.39196061 -0.8818535 -1.3740631  -2.1483651  -0.5997612
+    ## 2 -2.9623028 -3.73290788 -2.1916976 -3.4175600  -4.1851122  -2.6500078
     ## 3 -3.4713957 -4.62640890 -2.3163826 -3.5604107  -4.7524316  -2.3683898
     ## 4  0.2494747  0.07312272  0.4258266  0.2997844   0.1205309   0.4790379
     ## 5 -1.4172731 -1.62920024 -1.2053459 -1.4929295  -1.7301010  -1.2557580
-    ## 6 -2.3176179 -2.77876126 -1.8564745 -2.3064009  -2.7884204  -1.8243814
+    ## 6 -2.3159981 -2.77712742 -1.8548688 -2.3046386  -2.7866393  -1.8226380
 
 While we see some small changes in our estimates, our confidence
 intervals still do not contain zero, and we come to the same broad
@@ -1069,14 +1112,14 @@ regarding how arrests are charged, and quality of police reports and
 data provided to the DAO, we would be better able to evaluate this
 assumption.
 
-The longitudinal nature of our data also suggests that a model that
-takes this into account could provide more accurate effect estimates.
-For instance, an interrupted time series model could be well suited for
-this problem. One challenge is the lack of a control population post
-2018 (after Krasner took office). Future work in this direction could
-proceed by finding charge and arrest data from a comparison population
-in a different city which did not experience a change in DA during our
-time-frame and use this in an interrupted time series framework.
+Accounting for the longitudinal nature of our data could provide more
+accurate effect estimates. For instance, an interrupted time series
+model could be well suited for this problem. One challenge is the lack
+of a control population post 2018 (after Krasner took office). Future
+work in this direction could proceed by finding charge and arrest data
+from a comparison population in a different city which did not
+experience a change in DA during our time-frame and use this in an
+interrupted time series framework.
 
 Finally, beyond charges, the DAO plays a substantial role later in the
 criminal justice process, particularly in the bail process, diversionary

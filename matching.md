@@ -3,89 +3,50 @@ Supplementary document on matching methods
 Vitaly Lorman
 3/25/2021
 
-``` r
-library(tidyverse)
-```
+## Introduction
 
-    ## ── Attaching packages ──────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
+This document is a supplement to the analysis and write-up in
+[main.md](main.md), which estimates the effects of Larry Krasner’s
+tenure as Philadelphia District Attorney on criminal charges. We
+recommend reading that document first for the background and context for
+the methodology further described here, in particular the structure of
+our study and definitions of treatment, outcomes, and covariates.
 
-    ## ✓ ggplot2 3.3.0     ✓ purrr   0.3.3
-    ## ✓ tibble  3.0.3     ✓ dplyr   0.8.5
-    ## ✓ tidyr   1.0.2     ✓ stringr 1.4.0
-    ## ✓ readr   1.3.1     ✓ forcats 0.5.0
+The purpose of this file is to document the propensity score matching
+methods and measures of balance we examined and our decision making
+process in settling on variable-ratio nearest neighbor matching with
+calipers outlined employed in our final analysis. Our matching methods
+are all carried out using the ‘matchit’ package of Ho, Imai, King, and
+Stuart.
 
-    ## ── Conflicts ─────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## x dplyr::filter() masks stats::filter()
-    ## x dplyr::lag()    masks stats::lag()
-
-``` r
-library(knitr)
-library(lubridate)
-```
-
-    ## 
-    ## Attaching package: 'lubridate'
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     date
-
-``` r
-library(scales)
-```
-
-    ## 
-    ## Attaching package: 'scales'
-
-    ## The following object is masked from 'package:purrr':
-    ## 
-    ##     discard
-
-    ## The following object is masked from 'package:readr':
-    ## 
-    ##     col_factor
-
-``` r
-library(reshape2)
-```
-
-    ## 
-    ## Attaching package: 'reshape2'
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     smiths
-
-``` r
-library(MatchIt)
-library(optmatch)
-```
-
-    ## Loading required package: survival
-
-    ## The optmatch package has an academic license. Enter relaxinfo() for more information.
-
-``` r
-#library(Zelig)
-```
-
-In this document, we keep track of our various attempts at matching and
-analysis of balance.
+We begin by reading in the data (data acquisition and preprocessing is
+documented in [cleaning.md](cleaning.md))
 
 ``` r
 charges_all<-read.csv("charges_all.csv", row.names=1)
 charges_all_long<-read.csv("charges_all_long.csv", row.names=1)
 charges_all$date_value<-as.Date(charges_all$date_value)
 charges_all_long$date_value<-as.Date(charges_all_long$date_value)
+
+n_treatment<-sum(charges_all$treatment)
+n_control<-nrow(charges_all)-n_treatment
 ```
 
 ### Nearest neighbor matching
 
+We began by looking at nearest neighbor matching, first looking for
+exact matches on propensity scores. This did not yield any matches,
+which makes sense since it is highly unlike for two days in our time
+frame to have exactly equal numbers of arrests in each of the six
+offense categories.
+
+Next, we try 1-nearest neighbor matching.
+
 ``` r
 ##default
-m_nearest.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest")
-s_nearest.out <- summary(m_nearest.out, standardize = TRUE)
-s_nearest.out
+m_nearest<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest")
+s_nearest <- summary(m_nearest, standardize = TRUE)
+s_nearest
 ```
 
     ## 
@@ -148,33 +109,64 @@ s_nearest.out
     ## Unmatched     471       0
     ## Discarded       0       0
 
-``` r
-#plot(s_nearest.out)
+Looking at standardized mean differences, we see improvement in balance
+for each covariate comparing the matched data to all data. Nearest
+neighbor matching keeps all 804 of our treated units, and matches each
+with a single control unit. This results in leaving 471 control units
+unmatched. Next, we look at some plots to further assess the balance of
+this
+method.
 
-#plot(m_nearest.out,  type = "jitter", interactive = FALSE)
-#plot(m_nearest.out,  type = "hist")
-#plot(m_nearest.out, type="qq")
+``` r
+plot(s_nearest)
 ```
 
+![](matching_files/figure-gfm/plot%201nearest%20neighbors-1.png)<!-- -->
+
 ``` r
-m_knearest.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", min.controls=1, max.controls=3, ratio=1275/653)
+plot(m_nearest,  type = "jitter", interactive = FALSE)
 ```
 
-    ## Warning: Not enough control units for an average of 1.95252679938744 matches per
-    ## treated unit.
+![](matching_files/figure-gfm/plot%201nearest%20neighbors-2.png)<!-- -->
 
 ``` r
-s_knearest.out <- summary(m_knearest.out, standardize = TRUE)
+plot(m_nearest,  type = "hist")
+```
+
+![](matching_files/figure-gfm/plot%201nearest%20neighbors-3.png)<!-- -->
+
+``` r
+plot(m_nearest, type="qq")
+```
+
+![](matching_files/figure-gfm/plot%201nearest%20neighbors-4.png)<!-- -->![](matching_files/figure-gfm/plot%201nearest%20neighbors-5.png)<!-- -->
+The first plot, a Love plot, compares the absolute standized mean
+differences for each covariate between matched data and all data. The
+rightmost solid vertical bar shows a margin of 0.1 standardized mean
+difference units of zero. We see that, despite a reduction in
+standardize mean differences for each covariate, the absolute
+standardized mean differences for each covariate except drug arrest
+counts do not fall within this margin. The histogram and QQ plots also
+that we might hope for further improvement in balance.
+
+Next, we attempt to take advantage of the fact that we have more control
+than treatment units by implementing nearest neighbor matching allowing
+more than one control to be matched to each treatment unit. We use
+variable ratio matching and force each unit to be
+matched.
+
+``` r
+m_knearest<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", min.controls=1, max.controls=3, ratio=n_control/n_treatment)
+s_knearest <- summary(m_knearest, standardize = TRUE)
   
-s_knearest.out <- summary(m_knearest.out, standardize = TRUE)
-s_knearest.out
+s_knearest
 ```
 
     ## 
     ## Call:
     ## matchit(formula = treatment ~ arrests_violent + arrests_property + 
     ##     arrests_drugs + arrests_other + arrests_firearms + arrests_uncategorized, 
-    ##     data = charges_all, method = "nearest", ratio = 1275/653, 
+    ##     data = charges_all, method = "nearest", ratio = n_control/n_treatment, 
     ##     min.controls = 1, max.controls = 3)
     ## 
     ## Summary of Balance for All Data:
@@ -198,54 +190,92 @@ s_knearest.out
     ## 
     ## Summary of Balance for Matched Data:
     ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
-    ## distance                     0.5432        0.3554          0.8549     1.0949
-    ## arrests_violent             23.6231       25.6252         -0.2705     0.8516
-    ## arrests_property            12.3122       16.5240         -0.6792     0.7419
-    ## arrests_drugs               38.2624       40.9198         -0.1787     0.6637
-    ## arrests_other                2.7873        3.6830         -0.2589     0.9966
-    ## arrests_firearms             3.9639        3.3810          0.2418     1.0098
-    ## arrests_uncategorized       25.9801       24.6449          0.1764     1.0366
+    ## distance                     0.5432        0.3751          0.7651     1.2518
+    ## arrests_violent             23.6231       25.3064         -0.2274     0.8875
+    ## arrests_property            12.3122       15.8949         -0.5778     0.8170
+    ## arrests_drugs               38.2624       40.4401         -0.1465     0.6838
+    ## arrests_other                2.7873        3.5184         -0.2113     1.0879
+    ## arrests_firearms             3.9639        3.3895          0.2382     1.0210
+    ## arrests_uncategorized       25.9801       24.7506          0.1624     1.0471
     ##                       eCDF Mean eCDF Max Std. Pair Dist.
-    ## distance                 0.2152   0.3470          0.8893
-    ## arrests_violent          0.0414   0.1256          1.1637
-    ## arrests_property         0.0786   0.2805          1.0574
-    ## arrests_drugs            0.0341   0.1153          1.3096
-    ## arrests_other            0.0439   0.1480          1.0511
-    ## arrests_firearms         0.0371   0.1283          0.9964
-    ## arrests_uncategorized    0.0278   0.0808          1.0776
+    ## distance                 0.1886   0.3470          0.7008
+    ## arrests_violent          0.0351   0.1119          1.1817
+    ## arrests_property         0.0668   0.2595          0.9175
+    ## arrests_drugs            0.0305   0.1090          1.2844
+    ## arrests_other            0.0388   0.1310          1.0888
+    ## arrests_firearms         0.0366   0.1260          0.9860
+    ## arrests_uncategorized    0.0256   0.0738          1.0721
     ## 
     ## Percent Balance Improvement:
     ##                       Std. Mean Diff. Var. Ratio eCDF Mean eCDF Max
-    ## distance                         26.4       54.5      28.6     28.0
-    ## arrests_violent                  30.5       13.2      29.3     25.8
-    ## arrests_property                 29.7       37.2      29.3     26.9
-    ## arrests_drugs                    33.9       11.2      23.4     19.2
-    ## arrests_other                    29.3       97.2      23.5     23.1
-    ## arrests_firearms                 26.5       92.1      25.7     19.3
-    ## arrests_uncategorized            15.8       62.6      15.9     18.1
+    ## distance                         34.1      -12.8      37.4     28.0
+    ## arrests_violent                  41.6       35.6      40.0     33.8
+    ## arrests_property                 40.2       57.5      39.9     32.4
+    ## arrests_drugs                    45.9       17.7      31.4     23.6
+    ## arrests_other                    42.3       28.7      32.3     31.9
+    ## arrests_firearms                 27.6       83.0      26.8     20.8
+    ## arrests_uncategorized            22.5       52.1      22.6     25.3
     ## 
     ## Sample Sizes:
     ##               Control Treated
     ## All           1275.       804
-    ## Matched (ESS) 1081.26     804
+    ## Matched (ESS)  999.35     804
     ## Matched       1275.       804
     ## Unmatched        0.         0
     ## Discarded        0.         0
 
+We see that all control units have now been matched. We look at the same
+plots to see whether balance has
+improved.
+
 ``` r
-#plot(s_knearest.out)
-#plot(m_knearest.out,  type = "jitter", interactive = FALSE)
-#plot(m_knearest.out,  type = "hist")
-#plot(m_knearest.out, type="qq")
+plot(s_knearest)
 ```
 
-Does not seem to do
-better.
+![](matching_files/figure-gfm/plot%20knearest-1.png)<!-- -->
 
 ``` r
-m_subclass.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="subclass")
-s_subclass.out <- summary(m_subclass.out, standardize = TRUE)
-s_subclass.out
+plot(m_knearest,  type = "jitter", interactive = FALSE)
+```
+
+![](matching_files/figure-gfm/plot%20knearest-2.png)<!-- -->
+
+``` r
+plot(m_knearest,  type = "hist")
+```
+
+![](matching_files/figure-gfm/plot%20knearest-3.png)<!-- -->
+
+``` r
+plot(m_knearest, type="qq")
+```
+
+![](matching_files/figure-gfm/plot%20knearest-4.png)<!-- -->![](matching_files/figure-gfm/plot%20knearest-5.png)<!-- -->
+
+We see that incorporating all of the control units actually seems to
+produce worse balance. Looking at the jitter plots, we see that the
+control group’s propensity scores are much denser in the low end of the
+propensity score range. Conversely, the treatment group is dense in the
+high end of the propensity score range, and sparse in the low end.
+Forcing each control unit to have a match makes our balance worse, since
+the control units with low propensity scores do not have enough
+treatment units with similarly low propensity scores for each control
+unit to secure a good match.
+
+## Subclassification matching
+
+Next, we attempt to match by subclassification. This matching method
+creates subclasses (6 by default) such that treatment and control units
+in each subclass have similar distribution of covariates. To use the
+results of this in regression, we would weigh each unit inverse
+proportionately to the fraction of the population in the subclass. In
+subclassification matching, each unit is
+matched.
+
+``` r
+m_subclass<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="subclass")
+s_subclass <- summary(m_subclass, standardize = TRUE)
+s_subclass
 ```
 
     ## 
@@ -308,111 +338,92 @@ s_subclass.out
     ## Unmatched        0.         0
     ## Discarded        0.         0
 
-``` r
-#plot(s_subclass.out)
+We see large improvements in standardized mean differences. Let’s
+examine some
+    plots.
 
-#plot(m_subclass.out,  type = "jitter", interactive = FALSE)
-#plot(m_subclass.out,  type = "hist")
-#plot(m_subclass.out, type="qq")
+``` r
+plot(s_subclass)
 ```
 
-Subclass matching seems to do really
-well.
+![](matching_files/figure-gfm/plot%20subclass-1.png)<!-- -->
 
 ``` r
-#m_optimal.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="optimal", ratio=1275/653)
-#s_optimal.out <- summary(m_optimal.out, standardize = TRUE)
-#s_optimal.out
-#plot(s_optimal.out)
-
-#plot(m_optimal.out,  type = "jitter", interactive = FALSE)
-#plot(m_optimal.out,  type = "hist")
-#plot(m_optimal.out, type="qq")
+plot(m_subclass,  type = "jitter")
 ```
 
-Nope skip this
-one\!
+![](matching_files/figure-gfm/plot%20subclass-2.png)<!-- -->
+
+    ## [1] "To identify the units, use first mouse button; to stop, use second."
 
 ``` r
-m_cem.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="cem")
-s_cem.out <- summary(m_cem.out, standardize = TRUE)
-s_cem.out
+plot(m_subclass,  type = "hist", interactive = FALSE, subclass=FALSE)
 ```
 
-    ## 
-    ## Call:
-    ## matchit(formula = treatment ~ arrests_violent + arrests_property + 
-    ##     arrests_drugs + arrests_other + arrests_firearms + arrests_uncategorized, 
-    ##     data = charges_all, method = "cem")
-    ## 
-    ## Summary of Balance for All Data:
-    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
-    ## arrests_violent             23.6231       26.5059         -0.3895     0.8310
-    ## arrests_property            12.3122       18.3004         -0.9657     0.6218
-    ## arrests_drugs               38.2624       42.2847         -0.2705     0.6301
-    ## arrests_other                2.7873        4.0549         -0.3664     0.8886
-    ## arrests_firearms             3.9639        3.1710          0.3289     1.1302
-    ## arrests_uncategorized       25.9801       24.3937          0.2096     1.1008
-    ##                       eCDF Mean eCDF Max
-    ## arrests_violent          0.0585   0.1692
-    ## arrests_property         0.1113   0.3838
-    ## arrests_drugs            0.0445   0.1427
-    ## arrests_other            0.0573   0.1924
-    ## arrests_firearms         0.0500   0.1591
-    ## arrests_uncategorized    0.0330   0.0988
-    ## 
-    ## 
-    ## Summary of Balance for Matched Data:
-    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
-    ## arrests_violent             22.7159       22.9167         -0.0271     1.0148
-    ## arrests_property            13.8295       13.8466         -0.0027     0.9446
-    ## arrests_drugs               30.6818       30.9195         -0.0160     0.9714
-    ## arrests_other                1.4318        1.3920          0.0115     1.0320
-    ## arrests_firearms             2.6364        2.5805          0.0232     0.9307
-    ## arrests_uncategorized       21.6250       21.4792          0.0193     1.0059
-    ##                       eCDF Mean eCDF Max Std. Pair Dist.
-    ## arrests_violent          0.0094   0.0729          0.2790
-    ## arrests_property         0.0082   0.0606          0.3646
-    ## arrests_drugs            0.0105   0.0758          0.2451
-    ## arrests_other            0.0036   0.0398          0.1424
-    ## arrests_firearms         0.0049   0.0502          0.2044
-    ## arrests_uncategorized    0.0064   0.0379          0.1570
-    ## 
-    ## Percent Balance Improvement:
-    ##                       Std. Mean Diff. Var. Ratio eCDF Mean eCDF Max
-    ## arrests_violent                  93.0       92.0      83.9     56.9
-    ## arrests_property                 99.7       88.0      92.6     84.2
-    ## arrests_drugs                    94.1       93.7      76.5     46.9
-    ## arrests_other                    96.9       73.3      93.8     79.3
-    ## arrests_firearms                 93.0       41.3      90.2     68.5
-    ## arrests_uncategorized            90.8       93.9      80.8     61.6
-    ## 
-    ## Sample Sizes:
-    ##               Control Treated
-    ## All           1275.       804
-    ## Matched (ESS)   75.74      88
-    ## Matched         97.        88
-    ## Unmatched     1178.       716
-    ## Discarded        0.         0
+![](matching_files/figure-gfm/plot%20subclass-3.png)<!-- -->
 
 ``` r
-#plot(s_cem.out)
-
-#plot(m_cem.out,  type = "jitter", interactive = FALSE)
-#plot(m_cem.out,  type = "hist")
-#plot(m_cem.out, type="qq")
+plot(m_subclass, type="qq", interactive = FALSE, subclass=FALSE)
 ```
 
-CEM drops too many observations
+![](matching_files/figure-gfm/plot%20subclass-4.png)<!-- -->![](matching_files/figure-gfm/plot%20subclass-5.png)<!-- -->
 
-Try discarding everything outside the convex
-hull
+Subclass matching seems to do really well. The Love plot shows
+substantial improvements in balance.
+
+However, looking more closely at class membership, we see that some of
+our subclasses are very small.
 
 ``` r
-m_hull.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", discard="both")
+matched_subclass<-match.data(m_subclass)
+subclass_sum<-matched_subclass %>%
+  group_by(treatment, subclass) %>%
+  summarise(count=n())
 
-s_hull.out <- summary(m_hull.out, standardize = TRUE)
-s_hull.out
+subclass_sum
+```
+
+    ## # A tibble: 12 x 3
+    ## # Groups:   treatment [2]
+    ##    treatment subclass count
+    ##    <lgl>     <fct>    <int>
+    ##  1 FALSE     1          750
+    ##  2 FALSE     2          256
+    ##  3 FALSE     3          125
+    ##  4 FALSE     4           81
+    ##  5 FALSE     5           44
+    ##  6 FALSE     6           19
+    ##  7 TRUE      1          134
+    ##  8 TRUE      2          134
+    ##  9 TRUE      3          134
+    ## 10 TRUE      4          134
+    ## 11 TRUE      5          134
+    ## 12 TRUE      6          134
+
+We see that the 5th and 6th subclasses have only 44 and 19 control
+units, respectively, while the first subclass has 750\! These control
+units, the few on the higher end of the propensity score range, will be
+weighed more heavily in a regression, and we are concerned about
+weighing a few units so heavily.
+
+## Discarding some treatment units
+
+Instead, we try an alternate approach by allowing some treatment units
+to be excluded. While this may potentially introduce extrapolation bias
+into our estimates, in the Discussion section of [main.md](main.md) we
+argue that this concern does not apply to our situation (effectively
+because we assume each case is charged separately, and is independent of
+the volume or distribution of arrests for other cases on that day).
+
+First, we return to nearest neighbor matching and try discarding all
+units outside the convex hull of both treatment and control
+groups.
+
+``` r
+m_hull<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", discard="both")
+
+s_hull <- summary(m_hull, standardize = TRUE)
+s_hull
 ```
 
     ## 
@@ -471,98 +482,41 @@ s_hull.out
     ## Discarded       8      10
 
 ``` r
-#plot(s_hull.out)
+plot(s_hull)
+```
 
+![](matching_files/figure-gfm/discard%20hull-1.png)<!-- -->
+
+``` r
 #plot(m_hull.out,  type = "jitter", interactive = FALSE)
 #plot(m_hull.out,  type = "hist")
 #plot(m_hull.out, type="qq")
+```
 
-m_hull_subclass.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="subclass", discard="both")
-s_hull_subclass.out<-summary(m_hull_subclass.out, standardize=TRUE)
-s_hull_subclass.out
+We see that there are only a few units (10 in treatment, 8 in control)
+outside the convex hull, and thus not much data has been dropped, and
+balance has not improved as much as we would prefer.
+
+We next try nearest neighbor matching with calipers. The calipers,
+measured in standard deviation units, require that each match occur
+between units whose covariates are within the caliper values of each
+other.
+
+We carry this out for several different caliper values and look at the
+Love plots and summaries in each
+case.
+
+``` r
+mcal1<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.5)
+scal1 <- summary(mcal1, standardize = TRUE)
+scal1
 ```
 
     ## 
     ## Call:
     ## matchit(formula = treatment ~ arrests_violent + arrests_property + 
     ##     arrests_drugs + arrests_other + arrests_firearms + arrests_uncategorized, 
-    ##     data = charges_all, method = "subclass", discard = "both")
-    ## 
-    ## Summary of Balance for All Data:
-    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
-    ## distance                     0.5432        0.2880          1.1614     1.2204
-    ## arrests_violent             23.6231       26.5059         -0.3895     0.8310
-    ## arrests_property            12.3122       18.3004         -0.9657     0.6218
-    ## arrests_drugs               38.2624       42.2847         -0.2705     0.6301
-    ## arrests_other                2.7873        4.0549         -0.3664     0.8886
-    ## arrests_firearms             3.9639        3.1710          0.3289     1.1302
-    ## arrests_uncategorized       25.9801       24.3937          0.2096     1.1008
-    ##                       eCDF Mean eCDF Max
-    ## distance                 0.3013   0.4819
-    ## arrests_violent          0.0585   0.1692
-    ## arrests_property         0.1113   0.3838
-    ## arrests_drugs            0.0445   0.1427
-    ## arrests_other            0.0573   0.1924
-    ## arrests_firearms         0.0500   0.1591
-    ## arrests_uncategorized    0.0330   0.0988
-    ## 
-    ## Summary of Balance Across Subclasses
-    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
-    ## distance                     0.5387        0.5277          0.0502     0.9030
-    ## arrests_violent             23.6553       23.7660         -0.0149     0.9479
-    ## arrests_property            12.3836       13.2497         -0.1397     1.0807
-    ## arrests_drugs               38.2226       39.1487         -0.0623     0.7653
-    ## arrests_other                2.7962        3.0262         -0.0665     1.3211
-    ## arrests_firearms             3.9082        4.2613         -0.1465     0.5981
-    ## arrests_uncategorized       25.8805       26.2512         -0.0490     0.8911
-    ##                       eCDF Mean eCDF Max
-    ## distance                 0.0158   0.0443
-    ## arrests_violent          0.0104   0.0387
-    ## arrests_property         0.0188   0.0841
-    ## arrests_drugs            0.0207   0.0701
-    ## arrests_other            0.0222   0.0612
-    ## arrests_firearms         0.0234   0.0537
-    ## arrests_uncategorized    0.0124   0.0369
-    ## 
-    ## Percent Balance Improvement:
-    ##                       Std. Mean Diff. Var. Ratio eCDF Mean eCDF Max
-    ## distance                         95.7       26.0      94.8     90.8
-    ## arrests_violent                  96.2      -14.1      82.2     77.1
-    ## arrests_property                 85.5      -73.8      83.1     78.1
-    ## arrests_drugs                    77.0      -21.5      53.4     50.9
-    ## arrests_other                    81.9      -48.7      61.2     68.2
-    ## arrests_firearms                 55.5       47.1      53.1     66.2
-    ## arrests_uncategorized            76.6       19.0      62.6     62.6
-    ## 
-    ## Sample Sizes:
-    ##               Control Treated
-    ## All           1275.       804
-    ## Matched (ESS)  373.94     795
-    ## Matched       1266.       795
-    ## Unmatched        0.         0
-    ## Discarded        9.         9
-
-``` r
-#plot(s_hull_subclass.out)
-#plot(m_hull_subclass.out,  type = "jitter", interactive = FALSE)
-#plot(m_hull_subclass.out,  type = "hist")
-#plot(m_hull_subclass.out, type="qq")
-```
-
-Try nearest neighbor with calipers (ok to drop some treatment
-units)
-
-``` r
-mcal1.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.01)
-scal1.out <- summary(mcal1.out, standardize = TRUE)
-scal1.out
-```
-
-    ## 
-    ## Call:
-    ## matchit(formula = treatment ~ arrests_violent + arrests_property + 
-    ##     arrests_drugs + arrests_other + arrests_firearms + arrests_uncategorized, 
-    ##     data = charges_all, method = "nearest", caliper = 0.01)
+    ##     data = charges_all, method = "nearest", caliper = 0.5)
     ## 
     ## Summary of Balance for All Data:
     ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
@@ -585,71 +539,56 @@ scal1.out
     ## 
     ## Summary of Balance for Matched Data:
     ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
-    ## distance                     0.4334        0.4328          0.0031     1.0046
-    ## arrests_violent             24.6978       24.4544          0.0329     1.0926
-    ## arrests_property            14.2373       14.5132         -0.0445     1.2529
-    ## arrests_drugs               39.7039       38.6998          0.0675     0.7559
-    ## arrests_other                3.2759        3.1379          0.0399     1.6038
-    ## arrests_firearms             3.4970        3.5680         -0.0294     0.7378
-    ## arrests_uncategorized       24.9249       24.8235          0.0134     0.8282
+    ## distance                     0.5003        0.4253          0.3413     1.5123
+    ## arrests_violent             24.0555       24.4018         -0.0468     1.0378
+    ## arrests_property            13.0225       14.4408         -0.2287     1.3737
+    ## arrests_drugs               38.6927       38.9085         -0.0145     0.7404
+    ## arrests_other                2.9610        3.1589         -0.0572     1.4569
+    ## arrests_firearms             3.7511        3.5232          0.0945     0.8609
+    ## arrests_uncategorized       25.6027       24.7421          0.1137     1.0115
     ##                       eCDF Mean eCDF Max Std. Pair Dist.
-    ## distance                 0.0012   0.0101          0.0039
-    ## arrests_violent          0.0076   0.0243          1.0809
-    ## arrests_property         0.0114   0.0527          0.6385
-    ## arrests_drugs            0.0253   0.0811          1.2454
-    ## arrests_other            0.0208   0.0588          0.9556
-    ## arrests_firearms         0.0137   0.0426          0.9868
-    ## arrests_uncategorized    0.0123   0.0446          1.0800
+    ## distance                 0.0785   0.2129          0.3415
+    ## arrests_violent          0.0125   0.0495          1.0913
+    ## arrests_property         0.0309   0.1529          0.6678
+    ## arrests_drugs            0.0241   0.0675          1.2604
+    ## arrests_other            0.0247   0.0765          0.9490
+    ## arrests_firearms         0.0186   0.0825          1.0372
+    ## arrests_uncategorized    0.0179   0.0495          1.0610
     ## 
     ## Percent Balance Improvement:
     ##                       Std. Mean Diff. Var. Ratio eCDF Mean eCDF Max
-    ## distance                         99.7       97.7      99.6     97.9
-    ## arrests_violent                  91.6       52.2      87.0     85.6
-    ## arrests_property                 95.4       52.6      89.7     86.3
-    ## arrests_drugs                    75.0       39.4      43.2     43.1
-    ## arrests_other                    89.1     -300.1      63.7     69.4
-    ## arrests_firearms                 91.0     -148.4      72.6     73.2
-    ## arrests_uncategorized            93.6      -96.2      62.9     54.8
+    ## distance                         70.6     -107.7      73.9     55.8
+    ## arrests_violent                  88.0       80.0      78.6     70.8
+    ## arrests_property                 76.3       33.2      72.2     60.2
+    ## arrests_drugs                    94.6       34.9      45.9     52.7
+    ## arrests_other                    84.4     -218.8      56.8     60.3
+    ## arrests_firearms                 71.3      -22.3      62.7     48.2
+    ## arrests_uncategorized            45.8       88.0      45.8     49.9
     ## 
     ## Sample Sizes:
     ##           Control Treated
     ## All          1275     804
-    ## Matched       493     493
-    ## Unmatched     782     311
+    ## Matched       667     667
+    ## Unmatched     608     137
     ## Discarded       0       0
 
 ``` r
-#plot(scal1.out)
-
-#plot(mcal1.out,  type = "jitter", interactive = FALSE)
-#plot(mcal1.out,  type = "hist")
-#plot(mcal1.out, type="qq")
+plot(scal1)
 ```
 
-May still need to handle other manually.
-
-## Matching with subclasses
-
-The number of arrests for various offenses is the biggest potential
-confounder of charges. We account for this by matching. After
-experimenting with different methods of matching, we found the best
-balance using subclass matching while discarding a handful of
-observations (?) outside the common support of the propensity scores.
-This is justified
-because…
+![](matching_files/figure-gfm/calipers-1.png)<!-- -->
 
 ``` r
-m.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_firearms++arrests_other+arrests_uncategorized, data=charges_all, method="subclass", discard="both")
-
-s.out <- summary(m.out, standardize = TRUE)
-s.out
+mcal2<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.1)
+scal2 <- summary(mcal2, standardize = TRUE)
+scal2
 ```
 
     ## 
     ## Call:
     ## matchit(formula = treatment ~ arrests_violent + arrests_property + 
-    ##     arrests_drugs + arrests_firearms + +arrests_other + arrests_uncategorized, 
-    ##     data = charges_all, method = "subclass", discard = "both")
+    ##     arrests_drugs + arrests_other + arrests_firearms + arrests_uncategorized, 
+    ##     data = charges_all, method = "nearest", caliper = 0.1)
     ## 
     ## Summary of Balance for All Data:
     ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
@@ -657,80 +596,225 @@ s.out
     ## arrests_violent             23.6231       26.5059         -0.3895     0.8310
     ## arrests_property            12.3122       18.3004         -0.9657     0.6218
     ## arrests_drugs               38.2624       42.2847         -0.2705     0.6301
-    ## arrests_firearms             3.9639        3.1710          0.3289     1.1302
     ## arrests_other                2.7873        4.0549         -0.3664     0.8886
+    ## arrests_firearms             3.9639        3.1710          0.3289     1.1302
     ## arrests_uncategorized       25.9801       24.3937          0.2096     1.1008
     ##                       eCDF Mean eCDF Max
     ## distance                 0.3013   0.4819
     ## arrests_violent          0.0585   0.1692
     ## arrests_property         0.1113   0.3838
     ## arrests_drugs            0.0445   0.1427
-    ## arrests_firearms         0.0500   0.1591
     ## arrests_other            0.0573   0.1924
+    ## arrests_firearms         0.0500   0.1591
     ## arrests_uncategorized    0.0330   0.0988
     ## 
-    ## Summary of Balance Across Subclasses
+    ## 
+    ## Summary of Balance for Matched Data:
     ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
-    ## distance                     0.5387        0.5277          0.0502     0.9030
-    ## arrests_violent             23.6553       23.7660         -0.0149     0.9479
-    ## arrests_property            12.3836       13.2497         -0.1397     1.0807
-    ## arrests_drugs               38.2226       39.1487         -0.0623     0.7653
-    ## arrests_firearms             3.9082        4.2613         -0.1465     0.5981
-    ## arrests_other                2.7962        3.0262         -0.0665     1.3211
-    ## arrests_uncategorized       25.8805       26.2512         -0.0490     0.8911
-    ##                       eCDF Mean eCDF Max
-    ## distance                 0.0158   0.0443
-    ## arrests_violent          0.0104   0.0387
-    ## arrests_property         0.0188   0.0841
-    ## arrests_drugs            0.0207   0.0701
-    ## arrests_firearms         0.0234   0.0537
-    ## arrests_other            0.0222   0.0612
-    ## arrests_uncategorized    0.0124   0.0369
+    ## distance                     0.4517        0.4402          0.0522     1.0945
+    ## arrests_violent             24.5154       24.3938          0.0164     1.0723
+    ## arrests_property            13.9673       14.2886         -0.0518     1.2623
+    ## arrests_drugs               39.5608       38.9256          0.0427     0.7759
+    ## arrests_other                3.1924        3.1289          0.0184     1.4925
+    ## arrests_firearms             3.5590        3.5953         -0.0151     0.7384
+    ## arrests_uncategorized       25.2686       24.8657          0.0532     0.9244
+    ##                       eCDF Mean eCDF Max Std. Pair Dist.
+    ## distance                 0.0120   0.0563          0.0526
+    ## arrests_violent          0.0092   0.0345          1.0817
+    ## arrests_property         0.0114   0.0508          0.6623
+    ## arrests_drugs            0.0227   0.0726          1.2430
+    ## arrests_other            0.0179   0.0472          0.9751
+    ## arrests_firearms         0.0153   0.0544          1.0373
+    ## arrests_uncategorized    0.0101   0.0381          1.1059
     ## 
     ## Percent Balance Improvement:
     ##                       Std. Mean Diff. Var. Ratio eCDF Mean eCDF Max
-    ## distance                         95.7       26.0      94.8     90.8
-    ## arrests_violent                  96.2      -14.1      82.2     77.1
-    ## arrests_property                 85.5      -73.8      83.1     78.1
-    ## arrests_drugs                    77.0      -21.5      53.4     50.9
-    ## arrests_firearms                 55.5       47.1      53.1     66.2
-    ## arrests_other                    81.9      -48.7      61.2     68.2
-    ## arrests_uncategorized            76.6       19.0      62.6     62.6
+    ## distance                         95.5       54.7      96.0     88.3
+    ## arrests_violent                  95.8       62.3      84.3     79.6
+    ## arrests_property                 94.6       51.0      89.8     86.8
+    ## arrests_drugs                    84.2       45.1      49.0     49.1
+    ## arrests_other                    95.0     -239.2      68.7     75.5
+    ## arrests_firearms                 95.4     -147.7      69.4     65.8
+    ## arrests_uncategorized            74.6       18.1      69.3     61.4
+    ## 
+    ## Sample Sizes:
+    ##           Control Treated
+    ## All          1275     804
+    ## Matched       551     551
+    ## Unmatched     724     253
+    ## Discarded       0       0
+
+``` r
+plot(scal2)
+```
+
+![](matching_files/figure-gfm/calipers-2.png)<!-- -->
+
+``` r
+mcal3<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.05)
+scal3 <- summary(mcal3, standardize = TRUE)
+scal3
+```
+
+    ## 
+    ## Call:
+    ## matchit(formula = treatment ~ arrests_violent + arrests_property + 
+    ##     arrests_drugs + arrests_other + arrests_firearms + arrests_uncategorized, 
+    ##     data = charges_all, method = "nearest", caliper = 0.05)
+    ## 
+    ## Summary of Balance for All Data:
+    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
+    ## distance                     0.5432        0.2880          1.1614     1.2204
+    ## arrests_violent             23.6231       26.5059         -0.3895     0.8310
+    ## arrests_property            12.3122       18.3004         -0.9657     0.6218
+    ## arrests_drugs               38.2624       42.2847         -0.2705     0.6301
+    ## arrests_other                2.7873        4.0549         -0.3664     0.8886
+    ## arrests_firearms             3.9639        3.1710          0.3289     1.1302
+    ## arrests_uncategorized       25.9801       24.3937          0.2096     1.1008
+    ##                       eCDF Mean eCDF Max
+    ## distance                 0.3013   0.4819
+    ## arrests_violent          0.0585   0.1692
+    ## arrests_property         0.1113   0.3838
+    ## arrests_drugs            0.0445   0.1427
+    ## arrests_other            0.0573   0.1924
+    ## arrests_firearms         0.0500   0.1591
+    ## arrests_uncategorized    0.0330   0.0988
+    ## 
+    ## 
+    ## Summary of Balance for Matched Data:
+    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
+    ## distance                     0.4457        0.4409          0.0217     1.0413
+    ## arrests_violent             24.4972       24.3748          0.0165     1.0642
+    ## arrests_property            14.0464       14.3080         -0.0422     1.2653
+    ## arrests_drugs               39.1577       38.8553          0.0203     0.7738
+    ## arrests_other                3.1967        3.1336          0.0182     1.5066
+    ## arrests_firearms             3.5399        3.6048         -0.0269     0.7634
+    ## arrests_uncategorized       24.9889       24.8757          0.0150     0.8921
+    ##                       eCDF Mean eCDF Max Std. Pair Dist.
+    ## distance                 0.0051   0.0278          0.0221
+    ## arrests_violent          0.0091   0.0353          1.1130
+    ## arrests_property         0.0105   0.0445          0.6585
+    ## arrests_drugs            0.0227   0.0631          1.2089
+    ## arrests_other            0.0173   0.0519          0.9588
+    ## arrests_firearms         0.0139   0.0390          1.0088
+    ## arrests_uncategorized    0.0096   0.0334          1.1185
+    ## 
+    ## Percent Balance Improvement:
+    ##                       Std. Mean Diff. Var. Ratio eCDF Mean eCDF Max
+    ## distance                         98.1       79.7      98.3     94.2
+    ## arrests_violent                  95.8       66.4      84.5     79.2
+    ## arrests_property                 95.6       50.5      90.6     88.4
+    ## arrests_drugs                    92.5       44.5      49.1     55.8
+    ## arrests_other                    95.0     -247.1      69.8     73.0
+    ## arrests_firearms                 91.8     -120.6      72.2     75.5
+    ## arrests_uncategorized            92.9      -18.9      71.0     66.2
+    ## 
+    ## Sample Sizes:
+    ##           Control Treated
+    ## All          1275     804
+    ## Matched       539     539
+    ## Unmatched     736     265
+    ## Discarded       0       0
+
+``` r
+plot(scal3)
+```
+
+![](matching_files/figure-gfm/calipers-3.png)<!-- -->
+
+``` r
+#plot(mcal1.out,  type = "jitter", interactive = FALSE)
+#plot(mcal1.out,  type = "hist")
+#plot(mcal1.out, type="qq")
+```
+
+We see excellent balance for calipers of size 0.1 and 0.05 (each
+covariate has absolute standardize mean difference within 0.1 of zero,
+and most are within 0.05). The price we pay, in the case of calipers of
+size 0.1, is dropping 253 (about 31%) of our treatment units. We discuss
+this concern further in the Discussion section of our analysis. We
+experimented with other caliper values, and this one seemed to produce
+the best marginal improvement in balance for how many units we needed to
+discard.
+
+Finally, we take a look at k-nearest neighbor matching with 0.1 calipers
+and variable ratios, allowing more of our control units (those that fall
+within the caliper margins) to get
+matched.
+
+``` r
+mcal4.out<-matchit(treatment~arrests_violent+arrests_property+arrests_drugs+arrests_other+arrests_firearms+arrests_uncategorized, data=charges_all, method="nearest", caliper=0.1, ratio=n_control/n_treatment, min.controls=1, max.controls=3)
+scal4.out <- summary(mcal4.out, standardize = TRUE)
+scal4.out
+```
+
+    ## 
+    ## Call:
+    ## matchit(formula = treatment ~ arrests_violent + arrests_property + 
+    ##     arrests_drugs + arrests_other + arrests_firearms + arrests_uncategorized, 
+    ##     data = charges_all, method = "nearest", caliper = 0.1, ratio = n_control/n_treatment, 
+    ##     min.controls = 1, max.controls = 3)
+    ## 
+    ## Summary of Balance for All Data:
+    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
+    ## distance                     0.5432        0.2880          1.1614     1.2204
+    ## arrests_violent             23.6231       26.5059         -0.3895     0.8310
+    ## arrests_property            12.3122       18.3004         -0.9657     0.6218
+    ## arrests_drugs               38.2624       42.2847         -0.2705     0.6301
+    ## arrests_other                2.7873        4.0549         -0.3664     0.8886
+    ## arrests_firearms             3.9639        3.1710          0.3289     1.1302
+    ## arrests_uncategorized       25.9801       24.3937          0.2096     1.1008
+    ##                       eCDF Mean eCDF Max
+    ## distance                 0.3013   0.4819
+    ## arrests_violent          0.0585   0.1692
+    ## arrests_property         0.1113   0.3838
+    ## arrests_drugs            0.0445   0.1427
+    ## arrests_other            0.0573   0.1924
+    ## arrests_firearms         0.0500   0.1591
+    ## arrests_uncategorized    0.0330   0.0988
+    ## 
+    ## 
+    ## Summary of Balance for Matched Data:
+    ##                       Means Treated Means Control Std. Mean Diff. Var. Ratio
+    ## distance                     0.4517        0.4390          0.0578     1.0869
+    ## arrests_violent             24.5154       24.4619          0.0072     1.0359
+    ## arrests_property            13.9673       14.3285         -0.0582     1.2431
+    ## arrests_drugs               39.5608       39.2465          0.0211     0.7711
+    ## arrests_other                3.1924        3.1951         -0.0008     1.4480
+    ## arrests_firearms             3.5590        3.6010         -0.0174     0.7509
+    ## arrests_uncategorized       25.2686       25.0091          0.0343     0.9290
+    ##                       eCDF Mean eCDF Max Std. Pair Dist.
+    ## distance                 0.0136   0.0563          0.0416
+    ## arrests_violent          0.0096   0.0387          1.0887
+    ## arrests_property         0.0117   0.0538          0.6803
+    ## arrests_drugs            0.0210   0.0696          1.2609
+    ## arrests_other            0.0173   0.0466          1.0641
+    ## arrests_firearms         0.0134   0.0517          0.9621
+    ## arrests_uncategorized    0.0084   0.0321          1.0662
+    ## 
+    ## Percent Balance Improvement:
+    ##                       Std. Mean Diff. Var. Ratio eCDF Mean eCDF Max
+    ## distance                         95.0       58.2      95.5     88.3
+    ## arrests_violent                  98.1       81.0      83.6     77.1
+    ## arrests_property                 94.0       54.2      89.4     86.0
+    ## arrests_drugs                    92.2       43.7      52.9     51.3
+    ## arrests_other                    99.8     -213.5      69.8     75.8
+    ## arrests_firearms                 94.7     -134.0      73.2     67.5
+    ## arrests_uncategorized            83.6       23.4      74.7     67.5
     ## 
     ## Sample Sizes:
     ##               Control Treated
     ## All           1275.       804
-    ## Matched (ESS)  373.94     795
-    ## Matched       1266.       795
-    ## Unmatched        0.         0
-    ## Discarded        9.         9
+    ## Matched (ESS)  733.04     551
+    ## Matched        920.       551
+    ## Unmatched      355.       253
+    ## Discarded        0.         0
 
 ``` r
-#plot(s.out)
-#plot(m.out,  type = "jitter", interactive = FALSE)
-#plot(m.out,  type = "hist")
-#plot(m.out, type="qq", interactive=FALSE, subclass=1:6)
-
-matched_data<-match.data(m.out)
-#summarise(group_by(matched_data, subclass, treatment), count=n())
+plot(scal4.out)
 ```
 
-Let’s look at the distributions of arrests in the different
-classes:
+![](matching_files/figure-gfm/calipers%20k%20nearest-1.png)<!-- -->
 
-``` r
-matched_long<-melt(matched_data, id=c("date_value", "subclass", "treatment", "weights", "distance"))
-
-subclass_sum<-matched_long %>%
-  group_by(subclass, variable, treatment) %>%
-  summarise(mean=mean(value))
-
-subclass_arrest_sum<-subclass_sum[grep("^arrests", subclass_sum$variable),]
-
-ggplot(data=subclass_arrest_sum, aes(x=variable, y=mean, fill=treatment))+
-  geom_bar(position="dodge", stat="identity")+
-  facet_wrap(~subclass)+
-  theme(axis.text.x = element_text(angle = 90))
-```
-
-![](matching_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+We see more control units find matches without a substantial decrease in
+balance. This is the version of matching we use in our final analysis.
