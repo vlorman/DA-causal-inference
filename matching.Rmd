@@ -1,7 +1,7 @@
 ---
 title: "Supplementary document on matching methods"
 author: "Vitaly Lorman"
-date: "3/25/2021"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   github_document:
   number_sections: true
@@ -32,8 +32,8 @@ The purpose of this file is to document the propensity score matching methods an
 We begin by reading in the data (data acquisition and preprocessing is documented in [cleaning.md](cleaning.md))
 
 ```{r read data}
-charges_all<-read.csv("charges_all.csv", row.names=1)
-charges_all_long<-read.csv("charges_all_long.csv", row.names=1)
+charges_all<-read.csv("./data/charges_all.csv", row.names=1)
+charges_all_long<-read.csv("./data/charges_all_long.csv", row.names=1)
 charges_all$date_value<-as.Date(charges_all$date_value)
 charges_all_long$date_value<-as.Date(charges_all_long$date_value)
 

@@ -1,7 +1,7 @@
 Cleaning and preprocessing
 ================
 Vitaly Lorman
-3/25/2021
+12 April, 2021
 
 ## Introduction
 
@@ -19,12 +19,12 @@ District Attorney’s Office
 
 ``` r
 arrests_URL<-"https://github.com/phillydao/phillydao-public-data/raw/master/docs/data/arrest_data_daily_citywide.csv"
-download.file(arrests_URL, "arrests.csv")
-arrests<-read.csv("arrests.csv")
+download.file(arrests_URL, "./data/arrests.csv")
+arrests<-read.csv("./data/arrests.csv")
 
 charges_URL<-"https://github.com/phillydao/phillydao-public-data/raw/master/docs/data/charges_data_daily_citywide.csv"
-download.file(charges_URL, "charges.csv")
-charges<-read.csv("charges.csv")
+download.file(charges_URL, "./data/charges.csv")
+charges<-read.csv("./data/charges.csv")
 
 arrests$date_value<-as.Date(arrests$date_value)
 charges$date_value<-as.Date(charges$date_value)
@@ -109,8 +109,8 @@ comb[comb$date_value<"2018-01-01", "treatment"]<-FALSE
 
 
 
-write.csv(comb, "charges_all.csv")
-write.csv(comb_full, "charges_all_full.csv")
+write.csv(comb, "./data/charges_all.csv")
+write.csv(comb_full, "./data/charges_all_full.csv")
 
 charges_all<-comb
 charges_all_full<-comb_full
@@ -160,5 +160,5 @@ data_long<-select(data_long, "date_value", "type", "group", "value")
 write.csv(data_long, "charges_all_long.csv")
 
 data_long_full<-select(data_long_full, "date_value", "type", "group", "value")
-write.csv(data_long_full, "charges_all_long_full.csv")
+write.csv(data_long_full, "./data/charges_all_long_full.csv")
 ```

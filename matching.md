@@ -1,7 +1,7 @@
 Supplementary document on matching methods
 ================
 Vitaly Lorman
-3/25/2021
+12 April, 2021
 
 ## Introduction
 
@@ -23,8 +23,8 @@ We begin by reading in the data (data acquisition and preprocessing is
 documented in [cleaning.md](cleaning.md))
 
 ``` r
-charges_all<-read.csv("charges_all.csv", row.names=1)
-charges_all_long<-read.csv("charges_all_long.csv", row.names=1)
+charges_all<-read.csv("./data/charges_all.csv", row.names=1)
+charges_all_long<-read.csv("./data/charges_all_long.csv", row.names=1)
 charges_all$date_value<-as.Date(charges_all$date_value)
 charges_all_long$date_value<-as.Date(charges_all_long$date_value)
 

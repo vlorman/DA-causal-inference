@@ -2,7 +2,7 @@ Estimating the effect of Krasner’s tenure as District Attorney on
 criminal charges
 ================
 Vitaly Lorman
-10 April, 2021
+12 April, 2021
 
 ## Introduction
 
@@ -147,8 +147,8 @@ file) included the following steps:
 We read in the resulting datasets.
 
 ``` r
-charges_all<-read.csv("charges_all.csv", row.names=1)
-charges_all_long<-read.csv("charges_all_long.csv", row.names=1)
+charges_all<-read.csv("./data/charges_all.csv", row.names=1)
+charges_all_long<-read.csv("./data/charges_all_long.csv", row.names=1)
 charges_all$date_value<-as.Date(charges_all$date_value)
 charges_all_long$date_value<-as.Date(charges_all_long$date_value)
 ```
@@ -283,10 +283,11 @@ Before we conduct our analysis, we begin by presenting some summaries of
 our data. First, we show the counts for charges and arrests by type. For
 this chart, we use a version of the charges\_all\_long data frame in
 which the dates between 2017-06-29 and 2018-01-01 and the dates after
-2020-03-25 have not been excluded.
+2020-03-25 have not been
+excluded.
 
 ``` r
-all_dates_long<-read.csv("charges_all_long_full.csv", row.names=1)
+all_dates_long<-read.csv("./data/charges_all_long_full.csv", row.names=1)
 all_dates_long$date_value<-as.Date(all_dates_long$date_value)
 
 ggplot(data=all_dates_long, aes(x=date_value, y=value, col=type))+
@@ -689,24 +690,24 @@ summary(lm_uncategorized)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -12.3518  -2.7681  -0.1724   2.4585  25.2827 
+    ## -12.3520  -2.7695  -0.1723   2.4571  25.2815 
     ## 
     ## Coefficients:
     ##                        Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            3.918500   0.522501   7.500 1.11e-13 ***
-    ## treatment             -2.315998   0.235080  -9.852  < 2e-16 ***
-    ## arrests_violent        0.009684   0.015207   0.637   0.5244    
-    ## arrests_property      -0.033749   0.018438  -1.830   0.0674 .  
-    ## arrests_drugs          0.015361   0.007858   1.955   0.0508 .  
-    ## arrests_firearms       0.106323   0.051380   2.069   0.0387 *  
-    ## arrests_other         -0.020520   0.035942  -0.571   0.5681    
-    ## arrests_uncategorized  0.322395   0.017479  18.444  < 2e-16 ***
+    ## (Intercept)            3.916078   0.522604   7.493 1.16e-13 ***
+    ## treatment             -2.314187   0.235126  -9.842  < 2e-16 ***
+    ## arrests_violent        0.009877   0.015210   0.649   0.5162    
+    ## arrests_property      -0.033817   0.018442  -1.834   0.0669 .  
+    ## arrests_drugs          0.015351   0.007860   1.953   0.0510 .  
+    ## arrests_firearms       0.106368   0.051390   2.070   0.0386 *  
+    ## arrests_other         -0.020614   0.035949  -0.573   0.5664    
+    ## arrests_uncategorized  0.322362   0.017483  18.439  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 4.272 on 1463 degrees of freedom
-    ## Multiple R-squared:  0.2874, Adjusted R-squared:  0.284 
-    ## F-statistic: 84.28 on 7 and 1463 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 4.273 on 1463 degrees of freedom
+    ## Multiple R-squared:  0.2872, Adjusted R-squared:  0.2838 
+    ## F-statistic: 84.22 on 7 and 1463 DF,  p-value: < 2.2e-16
 
 ## Results: summary of estimated effects
 
@@ -766,7 +767,7 @@ effect_table
     ## 3         drugs -3.47 , ( -4.63 , -2.32 )   -8.34 , ( -11.12 , -5.57 )
     ## 4      firearms    0.25 , ( 0.07 , 0.43 )         8 , ( 2.34 , 13.65 )
     ## 5         other -1.42 , ( -1.63 , -1.21 ) -34.83 , ( -40.04 , -29.62 )
-    ## 6 uncategorized -2.32 , ( -2.78 , -1.85 ) -18.49 , ( -22.17 , -14.81 )
+    ## 6 uncategorized -2.31 , ( -2.78 , -1.85 ) -18.48 , ( -22.16 , -14.79 )
 
 ``` r
 kable(effect_table, caption="Effect estimates and 95% confidence intervals")
@@ -779,7 +780,7 @@ kable(effect_table, caption="Effect estimates and 95% confidence intervals")
 | drugs         | \-3.47 , ( -4.63 , -2.32 ) | \-8.34 , ( -11.12 , -5.57 )   |
 | firearms      | 0.25 , ( 0.07 , 0.43 )     | 8 , ( 2.34 , 13.65 )          |
 | other         | \-1.42 , ( -1.63 , -1.21 ) | \-34.83 , ( -40.04 , -29.62 ) |
-| uncategorized | \-2.32 , ( -2.78 , -1.85 ) | \-18.49 , ( -22.17 , -14.81 ) |
+| uncategorized | \-2.31 , ( -2.78 , -1.85 ) | \-18.48 , ( -22.16 , -14.79 ) |
 
 Effect estimates and 95% confidence intervals
 
@@ -913,7 +914,7 @@ select(effect_sum, "treatment", "confmin", "confmax", "treatment_res", "confmin_
     ## 3 -3.4713957 -4.62640890 -2.3163826 -3.5604107  -4.7524316  -2.3683898
     ## 4  0.2494747  0.07312272  0.4258266  0.2997844   0.1205309   0.4790379
     ## 5 -1.4172731 -1.62920024 -1.2053459 -1.4929295  -1.7301010  -1.2557580
-    ## 6 -2.3159981 -2.77712742 -1.8548688 -2.3046386  -2.7866393  -1.8226380
+    ## 6 -2.3141866 -2.77540677 -1.8529664 -2.3026594  -2.7847629  -1.8205558
 
 While we see some small changes in our estimates, our confidence
 intervals still do not contain zero, and we come to the same broad

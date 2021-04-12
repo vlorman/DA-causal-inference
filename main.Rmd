@@ -42,7 +42,7 @@ The DAO typically only gets involved in a case once an arrest has been made (by 
 
 In this document, we are interested in the part of the process that involves charges (which correspond to statutes in the Pennsylvania Criminal Law). The reason we are interested in charges is because how and whether a cases is charged is typically the first decision made by the DAO, and it occurs before many other actors (defense lawyers, judges, etc.) enter the process; thus, it is also the outcome for which we are able to study the effect of Krasner's DAO with the fewest potential confounders. 
 
-The publicly availably data from the DAO that we will be using in our analysis counts only the most serious charge (subject to the most severe sentence) for each case. To help our analysis and interpretability, we group the possible charges into six groups based on the DAO's grouping of these charges on their website @DAO. These groups, and the kinds of charges that comprise them, are as follows:
+The publicly availably data from the DAO that we will be using in our analysis counts only the most serious charge (subject to the most severe sentence) for each case. To help our analysis and interpretability, we group the possible charges into six groups based on the DAO's grouping of these charges on their website [@DAO]. These groups, and the kinds of charges that comprise them, are as follows:
 
 * **Violent charges:** Homicide, Non-fatal shooting, Rape", Robbery with a gun, Robbery (other), Aggravated assault with a gun, Aggravated assault (other), Other assaults, Sexual assaults and other sex offenses
 * **Property charges:** Residential burglary, Commercial burglary, Theft of motor vehicle tag,  Theft from person, Theft from auto, Retail theft", Theft, Auto theft, Fraud Theft of Services, Embezzlement
@@ -69,8 +69,8 @@ We read in the resulting datasets.
 
 ```{r read}
 
-charges_all<-read.csv("charges_all.csv", row.names=1)
-charges_all_long<-read.csv("charges_all_long.csv", row.names=1)
+charges_all<-read.csv("./data/charges_all.csv", row.names=1)
+charges_all_long<-read.csv("./data/charges_all_long.csv", row.names=1)
 charges_all$date_value<-as.Date(charges_all$date_value)
 charges_all_long$date_value<-as.Date(charges_all_long$date_value)
 ```
@@ -117,7 +117,7 @@ Our method of analysis will be to use a linear regression to estimate the treatm
 Before we conduct our analysis, we begin by presenting some summaries of our data. First, we show the counts for charges and arrests by type. For this chart, we use a version of the charges_all_long data frame in which the dates between 2017-06-29 and 2018-01-01 and the dates after 2020-03-25 have not been excluded.
 
 ```{r trends}
-all_dates_long<-read.csv("charges_all_long_full.csv", row.names=1)
+all_dates_long<-read.csv("./data/charges_all_long_full.csv", row.names=1)
 all_dates_long$date_value<-as.Date(all_dates_long$date_value)
 
 ggplot(data=all_dates_long, aes(x=date_value, y=value, col=type))+
