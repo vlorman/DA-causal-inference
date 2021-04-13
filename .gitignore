@@ -5,3 +5,4 @@ main.Rmd
 matching.Rmd
 .DS_Store
 .gitattributes
+.gitignore
